@@ -1,0 +1,6 @@
+import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
+import { getPost } from '@/lib/db';
+
+export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{const p=await getPost((await params).slug);if(!p)return{};return{title:p.seo_title||p.title,description:p.seo_description||p.excerpt};}
+export default async function Article({params}:{params:Promise<{slug:string}>}){const p=await getPost((await params).slug);if(!p)notFound();return <main className="main"><div className="container article"><div className="eyebrow">{p.category}</div><h1>{p.title}</h1><div className="meta">{p.published_at?new Date(p.published_at).toLocaleDateString('hi-IN'):''} • {p.author}</div>{p.featured_image&&<img src={p.featured_image} alt={p.title} className="article-image"/>}<p className="lead">{p.excerpt}</p><div className="article-body">{p.content.split('\n').map((x,i)=><p key={i}>{x}</p>)}</div><div className="ad-slot">Advertisement</div></div></main>}
