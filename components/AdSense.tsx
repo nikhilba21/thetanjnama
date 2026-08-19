@@ -1,0 +1,2 @@
+import Script from 'next/script';
+export default function AdSense(){const client=process.env.NEXT_PUBLIC_ADSENSE_CLIENT; if(!client)return null;return <><Script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`} crossOrigin="anonymous"/><ins className="adsbygoogle" style={{display:'block'}} data-ad-client={client} data-ad-slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT||''} data-ad-format="auto" data-full-width-responsive="true"/></>}
