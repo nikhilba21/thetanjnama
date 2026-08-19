@@ -1,0 +1,4 @@
+import { getPublishedPosts } from '@/lib/db';
+import { notFound } from 'next/navigation';
+const allowed=['आज का तंज','राष्ट्रीय','राजस्थान','राजनीति','समाज','विश्लेषण','Data Story','Editorial','Fact Check','नागरिक पत्रकारिता','Videos'];
+export default async function Category({params}:{params:Promise<{category:string}>}){const category=decodeURIComponent((await params).category);if(!allowed.includes(category))notFound();const posts=(await getPublishedPosts(50)).filter(p=>p.category===category);return <main className="main"><div className="container"><div className="section-title"><h1>{category}</h1></div><div className="articles">{posts.map(p=><a className="card" href={'/posts/'+p.slug} key={p.id}><div className="eyebrow">{p.category}</div><h2>{p.title}</h2><p>{p.excerpt}</p><div className="meta">{p.author}</div></a>)}</div></div></main>}
