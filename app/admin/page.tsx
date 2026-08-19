@@ -1,0 +1,14 @@
+'use client';
+import {useEffect,useState} from 'react';
+
+type Post={id:string;title:string;slug:string;excerpt:string;content:string;category:string;author:string;status:'draft'|'published'};
+const blank={title:'',slug:'',excerpt:'',content:'',category:'राष्ट्रीय',author:'Tanjnama Desk',status:'draft' as const};
+export default function Admin(){
+ const [posts,setPosts]=useState<Post[]>([]); const [form,setForm]=useState(blank); const [msg,setMsg]=useState('');
+ async function load(){const r=await fetch('/api/posts');if(r.ok)setPosts(await r.json());}
+ useEffect(()=>{load()},[]);
+ const set=(k:string,v:string)=>setForm({...form,[k]:v});
+ async function save(e:React.FormEvent){e.preventDefault();setMsg('Saving...');const r=await fetch('/api/posts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(form)});if(r.ok){setForm(blank);setMsg('Published/draft saved successfully');load()}else setMsg('Save failed — check Supabase setup');}
+ async function remove(id:string){if(!confirm('Delete this article?'))return;await fetch('/api/posts/'+id,{method:'DELETE'});load()}
+ return <main className="admin"><div className="container"><h1>📰 Tanjnama CMS</h1><p className="meta">Create, edit and manage articles. Connect Supabase environment variables before publishing.</p><div className="admin-grid"><form className="card" onSubmit={save}><h2>New Article</h2><input placeholder="Title" value={form.title} onChange={e=>set('title',e.target.value)} required/><input placeholder="SEO-friendly slug" value={form.slug} onChange={e=>set('slug',e.target.value)} required/><select value={form.category} onChange={e=>set('category',e.target.value)}>{['आज का तंज','राष्ट्रीय','राजस्थान','राजनीति','समाज','विश्लेषण','Data Story','Editorial','Fact Check','नागरिक पत्रकारिता','Videos'].map(x=><option key={x}>{x}</option>)}</select><input placeholder="Author" value={form.author} onChange={e=>set('author',e.target.value)}/><textarea placeholder="Short excerpt" value={form.excerpt} onChange={e=>set('excerpt',e.target.value)}/><textarea className="editor" placeholder="Article content (HTML/Markdown-ready text)" value={form.content} onChange={e=>set('content',e.target.value)} required/><select value={form.status} onChange={e=>set('status',e.target.value as 'draft'|'published')}><option value="draft">Draft</option><option value="published">Publish</option></select><button type="submit">Save Article</button><p>{msg}</p></form><section><h2>Articles</h2>{posts.map(p=><div className="card" key={p.id}><div className="eyebrow">{p.category} • {p.status}</div><h3>{p.title}</h3><div className="meta">/{p.slug}</div><button onClick={()=>remove(p.id)}>Delete</button></div>)}</section></div></div></main>
+}
