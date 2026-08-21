@@ -1,15 +1,31 @@
 import { getPublishedPosts } from '@/lib/db';
+import { getCategoryNameFromSlug } from '@/lib/categories';
 import Link from 'next/link';
+
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ category: string }>;
+}) {
+  const rawParam = (await params).category;
+  const categoryName = getCategoryNameFromSlug(rawParam) || decodeURIComponent(rawParam);
+  return {
+    title: `${categoryName} | TANJNAMA`,
+    description: `TANJNAMA पर ${categoryName} श्रेणी के सभी नवीनतम समाचार, तंज और निष्पक्ष विश्लेषण पढ़ें।`
+  };
+}
 
 export default async function CategoryPage({
   params
 }: {
   params: Promise<{ category: string }>;
 }) {
-  const categoryName = decodeURIComponent((await params).category);
+  const rawParam = (await params).category;
+  const categoryName = getCategoryNameFromSlug(rawParam) || decodeURIComponent(rawParam);
+
   const allPosts = await getPublishedPosts(50);
   const filtered = allPosts.filter(
-    (p) => p.category.toLowerCase() === categoryName.toLowerCase()
+    (p) => p.category.trim().toLowerCase() === categoryName.trim().toLowerCase()
   );
 
   return (
@@ -17,13 +33,13 @@ export default async function CategoryPage({
       <div className="container">
         <div className="section-title-box">
           <h2>📂 श्रेणी: {categoryName}</h2>
-          <span>{filtered.length} लेख</span>
+          <span>{filtered.length} लेख प्रकाशित</span>
         </div>
 
         {filtered.length === 0 ? (
-          <div style={{ background: '#ffffff', padding: '40px', borderRadius: '4px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
+          <div style={{ background: '#ffffff', padding: '40px', borderRadius: '6px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
             <p style={{ fontSize: '15px', color: '#656565' }}>
-              इस श्रेणी ({categoryName}) में अभी कोई लेख उपलब्ध नहीं है। जल्द ही नये लेख प्रकाशित किए जाएंगे!
+              इस श्रेणी (<strong>{categoryName}</strong>) में अभी कोई लेख उपलब्ध नहीं है। जल्द ही नये लेख प्रकाशित किए जाएंगे!
             </p>
           </div>
         ) : (

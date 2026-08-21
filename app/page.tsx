@@ -1,20 +1,7 @@
 import Link from 'next/link';
 import { getPublishedPosts } from '@/lib/db';
+import { CATEGORY_LIST } from '@/lib/categories';
 import AdSense from '@/components/AdSense';
-
-const categories = [
-  'आज का तंज',
-  'राष्ट्रीय',
-  'राजस्थान',
-  'राजनीति',
-  'समाज',
-  'विश्लेषण',
-  'Data Story',
-  'Editorial',
-  'Fact Check',
-  'नागरिक पत्रकारिता',
-  'Videos'
-];
 
 export default async function Home() {
   const posts = await getPublishedPosts(15);
@@ -82,20 +69,31 @@ export default async function Home() {
             )}
 
             {/* SARCASM SPOTLIGHT BOX */}
-            <div className="spotlight-card">
-              <div className="spotlight-header">
-                <span>🎭 आज का तंज (Satire Spotlight)</span>
+            <div
+              style={{
+                background: '#000000',
+                color: '#ffffff',
+                borderRadius: '6px',
+                padding: '22px',
+                marginBottom: '32px',
+                borderLeft: '6px solid var(--primary)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                <span style={{ background: 'var(--primary)', color: '#fff', fontSize: '11px', fontWeight: 800, padding: '3px 8px', borderRadius: '2px', textTransform: 'uppercase' }}>
+                  🎭 सोच पर तंज, सच के साथ
+                </span>
               </div>
-              <blockquote>
+              <blockquote style={{ fontFamily: 'var(--font-serif)', fontSize: '20px', lineHeight: '1.4', color: '#ffffff', fontStyle: 'italic' }}>
                 "खबरों के बीच का तंज ही वह आईना है, जिसमें राजनीति की असली सूरत साफ दिखाई देती है।"
               </blockquote>
-              <p style={{ fontSize: '12px', opacity: 0.8 }}>— तंजनामा संपादकीय</p>
+              <p style={{ fontSize: '12px', opacity: 0.8, marginTop: '8px' }}>— TANJNAMA Editorial Desk</p>
             </div>
 
             {/* LATEST POSTS GRID */}
             <div className="section-title-box">
               <h2>ताज़ा लेख एवं विश्लेषण</h2>
-              <span>नवीनतम अपडेट</span>
+              <span style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 700 }}>नवीनतम अपडेट</span>
             </div>
 
             <div className="posts-grid">
@@ -148,25 +146,32 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* CATEGORIES WIDGET */}
+            {/* CATEGORIES WIDGET WITH ENGLISH URL SLUGS */}
             <div className="sidebar-widget">
               <h3 className="widget-title">🏷️ विषय व श्रेणियां</h3>
               <div className="cat-pills">
-                {categories.map((c) => (
-                  <Link key={c} href={`/category/${encodeURIComponent(c)}`} className="cat-pill">
-                    {c}
+                {CATEGORY_LIST.map((c) => (
+                  <Link key={c.slug} href={`/category/${c.slug}`} className="cat-pill">
+                    {c.name}
                   </Link>
                 ))}
               </div>
             </div>
 
             {/* NEWSLETTER SUBSCRIPTION WIDGET */}
-            <div className="sidebar-widget newsletter-box">
-              <h3 className="widget-title">📧 Tanjnama न्यूज़लेटर</h3>
-              <p>दैनिक मुख्य खबरें और आज का तंज सीधे अपने इनबॉक्स में पाएं।</p>
-              <form className="newsletter-form" action="#" method="post">
-                <input type="email" placeholder="अपना ईमेल दर्ज करें..." required />
-                <button type="submit">सब्सक्राइब करें</button>
+            <div className="sidebar-widget" style={{ background: '#000000', color: '#ffffff' }}>
+              <h3 className="widget-title" style={{ color: '#ffffff' }}>📧 TANJNAMA न्यूज़लेटर</h3>
+              <p style={{ fontSize: '12px', color: '#cbd5e1', marginBottom: '14px' }}>
+                दैनिक मुख्य खबरें और सोच पर तंज सीधे अपने इनबॉक्स में पाएं।
+              </p>
+              <form style={{ display: 'flex', flexDirection: 'column', gap: '8px' }} action="#" method="post">
+                <input
+                  type="email"
+                  placeholder="अपना ईमेल दर्ज करें..."
+                  required
+                  style={{ padding: '10px', borderRadius: '4px', border: '1px solid #334155', background: '#111', color: '#fff', fontSize: '13px' }}
+                />
+                <button type="submit" className="btn-primary">सब्सक्राइब करें</button>
               </form>
             </div>
           </aside>

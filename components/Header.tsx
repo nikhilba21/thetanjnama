@@ -2,20 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-
-const categories = [
-  'आज का तंज',
-  'राष्ट्रीय',
-  'राजस्थान',
-  'राजनीति',
-  'समाज',
-  'विश्लेषण',
-  'Data Story',
-  'Editorial',
-  'Fact Check',
-  'नागरिक पत्रकारिता',
-  'Videos'
-];
+import { CATEGORY_LIST } from '@/lib/categories';
 
 export default function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -62,7 +49,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Main Header */}
+      {/* Main Header with Official Logo Image */}
       <header className="main-header">
         <div className="container header-inner">
           <div className="brand-group">
@@ -71,10 +58,10 @@ export default function Header() {
               onClick={() => setMobileNavOpen(!mobileNavOpen)}
               aria-label="Toggle Menu"
             >
-              ☰ Menu
+              ☰
             </button>
-            <Link href="/" className="brand-logo">
-              TANJ<span className="brand-accent">NAMA</span>
+            <Link href="/">
+              <img src="/logo.png" alt="TANJNAMA — सोच पर तंज, सच के साथ" className="brand-logo-img" />
             </Link>
           </div>
 
@@ -85,7 +72,7 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Navigation Bar */}
+        {/* Navigation Bar with Clean English Category Slugs */}
         <nav className="desktop-nav">
           <div className="container">
             <ul className="nav-list">
@@ -94,10 +81,10 @@ export default function Header() {
                   🏠 होम
                 </Link>
               </li>
-              {categories.map((c) => (
-                <li key={c}>
-                  <Link href={`/category/${encodeURIComponent(c)}`} className="nav-link">
-                    {c}
+              {CATEGORY_LIST.map((c) => (
+                <li key={c.slug}>
+                  <Link href={`/category/${c.slug}`} className="nav-link">
+                    {c.name}
                   </Link>
                 </li>
               ))}
@@ -110,18 +97,16 @@ export default function Header() {
       {mobileNavOpen && (
         <div className="mobile-drawer-overlay" onClick={() => setMobileNavOpen(false)}>
           <div className="search-modal" onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <span className="brand-logo" style={{ fontSize: '22px' }}>
-                TANJ<span className="brand-accent">NAMA</span>
-              </span>
-              <button onClick={() => setMobileNavOpen(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer' }}>✕</button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <img src="/logo.png" alt="TANJNAMA" style={{ height: '40px' }} />
+              <button onClick={() => setMobileNavOpen(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>✕</button>
             </div>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <li><Link href="/" onClick={() => setMobileNavOpen(false)}>🏠 होम</Link></li>
-              {categories.map((c) => (
-                <li key={c}>
-                  <Link href={`/category/${encodeURIComponent(c)}`} onClick={() => setMobileNavOpen(false)}>
-                    {c}
+              {CATEGORY_LIST.map((c) => (
+                <li key={c.slug}>
+                  <Link href={`/category/${c.slug}`} onClick={() => setMobileNavOpen(false)}>
+                    {c.name}
                   </Link>
                 </li>
               ))}
@@ -145,7 +130,7 @@ export default function Header() {
                 placeholder="खबरें, तंज या विषय खोजें..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ flex: 1, padding: '10px', border: '1px solid #0b87c2', borderRadius: '4px' }}
+                style={{ flex: 1, padding: '10px', border: '1px solid var(--primary)', borderRadius: '4px' }}
                 autoFocus
               />
               <button type="submit" className="btn-primary">खोजें</button>
