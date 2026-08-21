@@ -2,19 +2,176 @@ import Link from 'next/link';
 import { getPublishedPosts } from '@/lib/db';
 import AdSense from '@/components/AdSense';
 
-const categories=['आज का तंज','राष्ट्रीय','राजस्थान','राजनीति','समाज','विश्लेषण','Data Story','Editorial','Fact Check','नागरिक पत्रकारिता','Videos'];
-const fallback=[
- {id:'1',slug:'#',category:'राजस्थान',title:'राजस्थान की सियासत में फिर तेज हुई हलचल, बड़े फैसले पर सबकी नजर',excerpt:'प्रदेश की राजनीति में लगातार बदलते समीकरणों के बीच अब अगला कदम किसका होगा, इस पर चर्चा तेज है।'},
- {id:'2',slug:'#',category:'राष्ट्रीय',title:'देश की राजनीति में नए सवाल, पुराने जवाबों से नहीं चलेगा काम',excerpt:'बदलते राजनीतिक और सामाजिक माहौल पर एक नजर।'},
- {id:'3',slug:'#',category:'विश्लेषण',title:'आंकड़ों के पीछे की कहानी: जो खबरों की सुर्खियों में नहीं दिखती',excerpt:'डेटा को समझिए और जानिए तस्वीर का दूसरा पहलू।'},
- {id:'4',slug:'#',category:'समाज',title:'सोशल मीडिया के दौर में बदलती नागरिक पत्रकारिता',excerpt:'आम नागरिक अब खबर का दर्शक ही नहीं, हिस्सा भी है।'},
- {id:'5',slug:'#',category:'Editorial',title:'सवाल पूछना लोकतंत्र की सबसे जरूरी आदत क्यों है?',excerpt:'एक संपादकीय टिप्पणी।'},
- {id:'6',slug:'#',category:'Fact Check',title:'वायरल दावे की पड़ताल: सच क्या है?',excerpt:'दावे, स्रोत और उपलब्ध तथ्यों के आधार पर जांच।'}
+const categories = [
+  'आज का तंज',
+  'राष्ट्रीय',
+  'राजस्थान',
+  'राजनीति',
+  'समाज',
+  'विश्लेषण',
+  'Data Story',
+  'Editorial',
+  'Fact Check',
+  'नागरिक पत्रकारिता',
+  'Videos'
 ];
-export default async function Home(){const live=await getPublishedPosts(12);const posts=live.length?live:fallback;const hero=posts[0];return <main>
-<section className="ticker"><div className="container ticker-inner"><b>ताजा खबर</b><span>{hero.title}</span></div></section>
-<div className="container page"><div className="main-grid"><section>
-<div className="section-head"><h2>Latest News</h2><span>खबर • तंज • विश्लेषण</span></div>
-<div className="lead-grid"><Link href={hero.slug==='#'?'#':'/posts/'+hero.slug} className="lead-card"><div className="image-placeholder"><span>{hero.category}</span></div><div className="lead-info"><div className="tag">{hero.category}</div><h1>{hero.title}</h1><p>{hero.excerpt}</p><small>By Tanjnama Desk • आज</small></div></Link><div className="hot-list">{posts.slice(1,4).map(p=><Link href={p.slug==='#'?'#':'/posts/'+p.slug} className="hot-item" key={p.id}><div className="mini-image">{p.category}</div><div><b>{p.title}</b><small>{p.category} • आज</small></div></Link>)}</div></div>
-<div className="section-head"><h2>Latest Posts</h2><span>View All</span></div><div className="post-grid">{posts.slice(1).map(p=><Link href={p.slug==='#'?'#':'/posts/'+p.slug} className="post-card" key={p.id}><div className="post-image"><span>{p.category}</span></div><div className="post-info"><div className="tag">{p.category}</div><h3>{p.title}</h3><p>{p.excerpt}</p><small>आज • Tanjnama Desk</small></div></Link>)}</div>
-</section><aside><div className="widget"><h3>Advertisement</h3><AdSense/></div><div className="widget"><h3>Popular Posts</h3>{posts.slice(0,5).map((p,i)=><Link href={p.slug==='#'?'#':'/posts/'+p.slug} className="popular" key={p.id}><strong>{String(i+1).padStart(2,'0')}</strong><span>{p.title}</span></Link>)}</div><div className="widget"><h3>Categories</h3><div className="cats">{categories.map(c=><Link key={c} href={'/category/'+encodeURIComponent(c)}>{c}</Link>)}</div></div></aside></div></div></main>}
+
+export default async function Home() {
+  const posts = await getPublishedPosts(15);
+  const heroPost = posts[0];
+  const hotPosts = posts.slice(1, 4);
+  const mainPosts = posts.slice(4);
+
+  return (
+    <main className="page-container">
+      <div className="container">
+        <div className="main-layout">
+          {/* MAIN NEWS FEED */}
+          <section className="feed-section">
+            {/* HERO SECTION */}
+            {heroPost && (
+              <div className="hero-grid">
+                <Link href={`/posts/${heroPost.slug}`} className="main-lead-card">
+                  <div className="lead-image-box">
+                    <img
+                      src={
+                        heroPost.featured_image ||
+                        'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&q=80'
+                      }
+                      alt={heroPost.title}
+                    />
+                    <span className="cat-badge">{heroPost.category}</span>
+                  </div>
+                  <div className="lead-content">
+                    <h1>{heroPost.title}</h1>
+                    <p>{heroPost.excerpt}</p>
+                    <div className="post-meta-line">
+                      <span>✍️ {heroPost.author}</span>
+                      <span>•</span>
+                      <span>📅 {new Date(heroPost.published_at || Date.now()).toLocaleDateString('hi-IN')}</span>
+                    </div>
+                  </div>
+                </Link>
+
+                {/* HOT STORIES COLUMN */}
+                <div className="hot-stories-list">
+                  <div className="section-title-box" style={{ marginBottom: '14px' }}>
+                    <h2 style={{ fontSize: '18px' }}>🔥 ट्रेंडिंग खबरें</h2>
+                  </div>
+                  {hotPosts.map((p) => (
+                    <Link href={`/posts/${p.slug}`} className="hot-story-item" key={p.id}>
+                      <div className="hot-story-thumb">
+                        <img
+                          src={
+                            p.featured_image ||
+                            'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=400&q=80'
+                          }
+                          alt={p.title}
+                        />
+                      </div>
+                      <div className="hot-story-info">
+                        <h3>{p.title}</h3>
+                        <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 700 }}>
+                          {p.category}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* SARCASM SPOTLIGHT BOX */}
+            <div className="spotlight-card">
+              <div className="spotlight-header">
+                <span>🎭 आज का तंज (Satire Spotlight)</span>
+              </div>
+              <blockquote>
+                "खबरों के बीच का तंज ही वह आईना है, जिसमें राजनीति की असली सूरत साफ दिखाई देती है।"
+              </blockquote>
+              <p style={{ fontSize: '12px', opacity: 0.8 }}>— तंजनामा संपादकीय</p>
+            </div>
+
+            {/* LATEST POSTS GRID */}
+            <div className="section-title-box">
+              <h2>ताज़ा लेख एवं विश्लेषण</h2>
+              <span>नवीनतम अपडेट</span>
+            </div>
+
+            <div className="posts-grid">
+              {mainPosts.map((p) => (
+                <Link href={`/posts/${p.slug}`} className="post-card" key={p.id}>
+                  <div className="post-card-image">
+                    <img
+                      src={
+                        p.featured_image ||
+                        'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80'
+                      }
+                      alt={p.title}
+                    />
+                    <span className="cat-badge">{p.category}</span>
+                  </div>
+                  <div className="post-card-content">
+                    <h3>{p.title}</h3>
+                    <p>{p.excerpt}</p>
+                    <div className="post-meta-line">
+                      <span>{new Date(p.published_at || Date.now()).toLocaleDateString('hi-IN')}</span>
+                      <span>•</span>
+                      <span>{p.author}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* IN-FEED ADSENSE PLACEMENT */}
+            <AdSense slot="in-feed-home" format="auto" />
+          </section>
+
+          {/* SIDEBAR */}
+          <aside className="sidebar">
+            {/* SIDEBAR ADSENSE WIDGET */}
+            <div className="sidebar-widget">
+              <AdSense slot="sidebar-home" format="auto" />
+            </div>
+
+            {/* POPULAR POSTS WIDGET */}
+            <div className="sidebar-widget">
+              <h3 className="widget-title">📌 सर्वाधिक पढ़े गए लेख</h3>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {posts.slice(0, 5).map((p, i) => (
+                  <Link href={`/posts/${p.slug}`} className="popular-item" key={p.id}>
+                    <span className="popular-num">{String(i + 1).padStart(2, '0')}</span>
+                    <span className="popular-text">{p.title}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* CATEGORIES WIDGET */}
+            <div className="sidebar-widget">
+              <h3 className="widget-title">🏷️ विषय व श्रेणियां</h3>
+              <div className="cat-pills">
+                {categories.map((c) => (
+                  <Link key={c} href={`/category/${encodeURIComponent(c)}`} className="cat-pill">
+                    {c}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* NEWSLETTER SUBSCRIPTION WIDGET */}
+            <div className="sidebar-widget newsletter-box">
+              <h3 className="widget-title">📧 Tanjnama न्यूज़लेटर</h3>
+              <p>दैनिक मुख्य खबरें और आज का तंज सीधे अपने इनबॉक्स में पाएं।</p>
+              <form className="newsletter-form" action="#" method="post">
+                <input type="email" placeholder="अपना ईमेल दर्ज करें..." required />
+                <button type="submit">सब्सक्राइब करें</button>
+              </form>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  );
+}
