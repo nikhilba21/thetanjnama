@@ -529,7 +529,7 @@ export default function AdminPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {filteredPosts.length === 0 ? (
-                <p style={{ padding: '20px', textCenter: 'center', color: '#64748b' }}>कोई लेख नहीं मिला।</p>
+                <p style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>कोई लेख नहीं मिला।</p>
               ) : (
                 filteredPosts.map((p) => (
                   <div
