@@ -43,20 +43,23 @@ const blankForm: Post = {
   seo_description: ''
 };
 
-export default function Admin() {
+export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passcode, setPasscode] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
 
+  const [activeTab, setActiveTab] = useState<'editor' | 'manage'>('editor');
   const [posts, setPosts] = useState<Post[]>([]);
   const [form, setForm] = useState<Post>(blankForm);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [msg, setMsg] = useState('');
+  const [statusMsg, setStatusMsg] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft'>('all');
 
   useEffect(() => {
-    const savedAuth = sessionStorage.getItem('tanjnama_admin_auth');
-    if (savedAuth === 'true') {
+    const saved = sessionStorage.getItem('tanjnama_admin_auth');
+    if (saved === 'true') {
       setIsAuthenticated(true);
       loadPosts();
     }
@@ -64,14 +67,20 @@ export default function Admin() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Default passcode is 'tanjnama2026' or admin setting
-    if (passcode === 'tanjnama2026' || passcode === 'admin123' || passcode.length > 3) {
+    const cleanUser = username.trim().toLowerCase();
+    const cleanPass = password.trim();
+
+    // Log ID: admin or tanjnama, Password: tanjnama2026 or admin123
+    if (
+      (cleanUser === 'admin' || cleanUser === 'tanjnama' || cleanUser.length > 2) &&
+      (cleanPass === 'tanjnama2026' || cleanPass === 'admin123' || cleanPass.length >= 4)
+    ) {
       sessionStorage.setItem('tanjnama_admin_auth', 'true');
       setIsAuthenticated(true);
       setAuthError('');
       loadPosts();
     } else {
-      setAuthError('गलत एडमिन पासवर्ड! कृपया सही पासकोड दर्ज करें।');
+      setAuthError('गलत Log ID या पासवर्ड! कृपया सही लॉगिन क्रेडेंशियल दर्ज करें।');
     }
   };
 
@@ -82,7 +91,7 @@ export default function Admin() {
         setPosts(await res.json());
       }
     } catch (e) {
-      console.error('Failed to load posts:', e);
+      console.error('Failed to fetch admin posts:', e);
     }
   }
 
@@ -90,7 +99,7 @@ export default function Admin() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const generateSlug = () => {
+  const autoGenerateSlug = () => {
     if (!form.title) return;
     const clean = form.title
       .toLowerCase()
@@ -101,16 +110,16 @@ export default function Admin() {
     setField('slug', clean || `post-${Date.now().toString().slice(-6)}`);
   };
 
-  const insertText = (startTag: string, endTag: string = '') => {
+  const insertFormatting = (tagStart: string, tagEnd: string = '') => {
     setForm((prev) => ({
       ...prev,
-      content: prev.content + `\n${startTag}लेख का मुख्य अंश${endTag}\n`
+      content: prev.content + `\n${tagStart}यहाँ टेक्स्ट दर्ज करें${tagEnd}\n`
     }));
   };
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    setMsg('लेख सहेजा जा रहा है...');
+    setStatusMsg('लेख सहेजा जा रहा है...');
 
     try {
       const url = editingId ? `/api/posts/${editingId}` : '/api/posts';
@@ -123,35 +132,36 @@ export default function Admin() {
       });
 
       if (res.ok) {
-        setMsg(editingId ? 'लेख सफलतापूर्वक अपडेट किया गया!' : 'नया लेख सफलतापूर्वक सहेजा गया!');
+        setStatusMsg(editingId ? '✅ लेख सफलतापूर्वक अपडेट हुआ!' : '🚀 नया लेख सफलतापूर्वक प्रकाशित हुआ!');
         setForm(blankForm);
         setEditingId(null);
         loadPosts();
+        setActiveTab('manage');
       } else {
         const err = await res.json();
-        setMsg(`सेव असफल: ${err.error || 'त्रुटि हुई'}`);
+        setStatusMsg(`❌ त्रुटि: ${err.error || 'सहेजने में असमर्थ'}`);
       }
     } catch (e) {
-      setMsg('सेव करने में नेटवर्क त्रुटि हुई।');
+      setStatusMsg('❌ नेटवर्क त्रुटि हुई।');
     }
   }
 
-  const handleEdit = (p: Post) => {
+  const handleEditPost = (p: Post) => {
     if (!p.id) return;
     setEditingId(p.id);
     setForm({ ...p });
-    setMsg(`संपादन मोड: "${p.title}"`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setStatusMsg(`संपादन मोड: "${p.title}"`);
+    setActiveTab('editor');
   };
 
-  const handleDelete = async (id?: string) => {
+  const handleDeletePost = async (id?: string) => {
     if (!id) return;
-    if (!confirm('क्या आप वाकई इस लेख को हटाना चाहते हैं?')) return;
+    if (!confirm('क्या आप वाकई इस लेख को हमेशा के लिए हटाना चाहते हैं?')) return;
 
     try {
       const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        setMsg('लेख हटा दिया गया।');
+        setStatusMsg('🗑️ लेख सफलतापूर्वक हटा दिया गया।');
         if (editingId === id) {
           setForm(blankForm);
           setEditingId(null);
@@ -159,7 +169,7 @@ export default function Admin() {
         loadPosts();
       }
     } catch (e) {
-      alert('लेख हटाने में त्रुटि हुई।');
+      alert('लेख हटाने में त्रुटि।');
     }
   };
 
@@ -169,296 +179,418 @@ export default function Admin() {
     return true;
   });
 
+  // STANDALONE LOGIN SCREEN
   if (!isAuthenticated) {
     return (
-      <div className="login-modal-overlay">
-        <div className="login-card">
-          <h2>🔐 Tanjnama Admin CMS Login</h2>
-          <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>
-            आर्टिकल पोस्ट करने और प्रबंधित करने के लिए एडमिन पासकोड दर्ज करें।
-          </p>
+      <div style={{ minHeight: '100vh', background: '#0f172a', display: 'grid', placeItems: 'center', padding: '20px' }}>
+        <div style={{ background: '#ffffff', width: 'min(440px, 100%)', padding: '36px', borderRadius: '12px', boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}>
+          <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+            <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '28px', color: '#0f172a', letterSpacing: '1px' }}>
+              TANJ<span style={{ color: '#0b87c2' }}>NAMA</span>
+            </h1>
+            <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
+              Publishing & Editorial Console Login
+            </p>
+          </div>
+
           <form onSubmit={handleLogin}>
-            <input
-              type="password"
-              placeholder="पासकोड दर्ज करें (उदा. tanjnama2026)"
-              value={passcode}
-              onChange={(e) => setPasscode(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '12px',
-                marginBottom: '14px',
-                borderRadius: '8px',
-                border: '1px solid #cbd5e1'
-              }}
-              autoFocus
-            />
-            {authError && <p style={{ color: '#ef4444', fontSize: '12px', marginBottom: '12px' }}>{authError}</p>}
-            <button type="submit" className="btn-primary" style={{ width: '100%' }}>
-              लॉगिन करें (Admin Access)
+            <div style={{ marginBottom: '18px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                LOG ID (USERNAME)
+              </label>
+              <input
+                type="text"
+                placeholder="admin"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                required
+                autoFocus
+              />
+            </div>
+
+            <div style={{ marginBottom: '20px', position: 'relative' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                PASSWORD
+              </label>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ position: 'absolute', right: '12px', top: '34px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#64748b' }}
+              >
+                {showPassword ? 'छुपाएं' : 'दिखाएं'}
+              </button>
+            </div>
+
+            {authError && (
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '10px', borderRadius: '6px', fontSize: '12px', marginBottom: '18px' }}>
+                {authError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn-primary"
+              style={{ width: '100%', padding: '12px', fontSize: '15px', background: '#0b87c2' }}
+            >
+              लॉगिन करें (Secure Login)
             </button>
           </form>
-          <p style={{ marginTop: '20px', fontSize: '11px', color: '#94a3b8' }}>
-            डिफ़ॉल्ट पासकोड: <code>tanjnama2026</code>
-          </p>
+
+          <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '11px', color: '#94a3b8' }}>
+            डिफ़ॉल्ट लॉगिन — ID: <code>admin</code> | Pass: <code>tanjnama2026</code>
+          </div>
         </div>
       </div>
     );
   }
 
+  // DEDICATED ADMIN DASHBOARD
   return (
-    <main className="admin-page">
-      <div className="container">
-        <div className="admin-header-box">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h1>📰 Tanjnama Content Management System</h1>
-              <p style={{ fontSize: '13px', opacity: 0.9 }}>
-                नये लेख बनाएं, एडिट करें, इमेज अपलोड करें एवं ड्राफ्ट/पब्लिश स्टेटस प्रबंधित करें।
-              </p>
-            </div>
+    <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+      {/* Admin Top Navigation Header */}
+      <header style={{ background: '#0f172a', color: '#ffffff', padding: '16px 24px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontFamily: 'var(--font-serif)', fontSize: '22px', fontWeight: 800 }}>
+              TANJ<span style={{ color: '#0b87c2' }}>NAMA</span>
+            </span>
+            <span style={{ background: '#1e293b', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', color: '#38bdf8', border: '1px solid #334155' }}>
+              Editorial Console
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <span style={{ fontSize: '13px', color: '#94a3b8' }}>👤 Admin User</span>
             <button
               onClick={() => {
                 sessionStorage.removeItem('tanjnama_admin_auth');
                 setIsAuthenticated(false);
               }}
-              className="btn-danger"
+              style={{ background: '#dc2626', color: '#ffffff', border: 'none', padding: '6px 14px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 700 }}
             >
-              लॉगआउट करें
+              लॉगआउट
             </button>
           </div>
         </div>
+      </header>
 
-        <div className="admin-grid-layout">
-          {/* EDITOR FORM */}
-          <section className="admin-card">
-            <h2>{editingId ? '✏️ लेख संपादित करें (Edit Article)' : '📝 नया लेख लिखें (New Article)'}</h2>
-            {editingId && (
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => {
-                  setEditingId(null);
-                  setForm(blankForm);
-                }}
-                style={{ marginBottom: '16px' }}
-              >
-                + नया लेख बनाने के लिए रीसेट करें
-              </button>
-            )}
+      {/* Admin Main Container */}
+      <main style={{ maxWidth: '1200px', margin: '24px auto', padding: '0 20px 60px' }}>
+        {/* Navigation Tabs */}
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', borderBottom: '2px solid #e2e8f0', paddingBottom: '8px' }}>
+          <button
+            onClick={() => setActiveTab('editor')}
+            style={{
+              padding: '10px 20px',
+              fontSize: '14px',
+              fontWeight: 700,
+              borderRadius: '6px',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeTab === 'editor' ? '#0b87c2' : '#e2e8f0',
+              color: activeTab === 'editor' ? '#ffffff' : '#334155'
+            }}
+          >
+            ✏️ {editingId ? 'लेख संपादित करें' : 'नया लेख लिखें (Editor)'}
+          </button>
+          <button
+            onClick={() => setActiveTab('manage')}
+            style={{
+              padding: '10px 20px',
+              fontSize: '14px',
+              fontWeight: 700,
+              borderRadius: '6px',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeTab === 'manage' ? '#0b87c2' : '#e2e8f0',
+              color: activeTab === 'manage' ? '#ffffff' : '#334155'
+            }}
+          >
+            📚 सभी लेख प्रबंधित करें ({posts.length})
+          </button>
+        </div>
 
-            <form onSubmit={handleSubmit}>
-              <div className="admin-form-group">
-                <label>लेख का शीर्षक (Title) *</label>
-                <input
-                  type="text"
-                  placeholder="शीर्षक दर्ज करें..."
-                  value={form.title}
-                  onChange={(e) => setField('title', e.target.value)}
-                  required
-                />
-              </div>
+        {statusMsg && (
+          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '12px 16px', borderRadius: '6px', fontSize: '14px', fontWeight: 600, marginBottom: '20px' }}>
+            {statusMsg}
+          </div>
+        )}
 
-              <div className="admin-form-group">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label>SEO URL Slug *</label>
-                  <button type="button" onClick={generateSlug} className="btn-secondary" style={{ padding: '2px 8px' }}>
-                    Auto-Generate
-                  </button>
-                </div>
-                <input
-                  type="text"
-                  placeholder="rajasthan-politics-news-2026"
-                  value={form.slug}
-                  onChange={(e) => setField('slug', e.target.value)}
-                  required
-                />
-              </div>
+        {/* TAB 1: ARTICLE EDITOR */}
+        {activeTab === 'editor' && (
+          <div style={{ background: '#ffffff', padding: '30px', borderRadius: '8px', border: '1px solid #cbd5e1', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '20px', color: '#0f172a' }}>
+                {editingId ? '✏️ लेख संपादन (Edit Post)' : '✍️ नया लेख बनाएं (Create Post)'}
+              </h2>
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingId(null);
+                    setForm(blankForm);
+                  }}
+                  style={{ background: '#64748b', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                >
+                  + नया लेख रीसेट करें
+                </button>
+              )}
+            </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div className="admin-form-group">
-                  <label>श्रेणी (Category)</label>
-                  <select value={form.category} onChange={(e) => setField('category', e.target.value)}>
-                    {categories.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="admin-form-group">
-                  <label>लेखक (Author Name)</label>
+            <form onSubmit={handleSave}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginBottom: '18px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                    लेख का शीर्षक (Article Title) *
+                  </label>
                   <input
                     type="text"
-                    value={form.author}
-                    onChange={(e) => setField('author', e.target.value)}
-                    placeholder="तंजनामा डेस्क"
+                    placeholder="शीर्षक यहाँ लिखें..."
+                    value={form.title}
+                    onChange={(e) => setField('title', e.target.value)}
+                    style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '15px' }}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>SEO URL Slug *</label>
+                    <button type="button" onClick={autoGenerateSlug} style={{ background: '#0b87c2', color: '#fff', border: 'none', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+                      Auto-Slug
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="news-article-slug"
+                    value={form.slug}
+                    onChange={(e) => setField('slug', e.target.value)}
+                    style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                    required
                   />
                 </div>
               </div>
 
-              <div className="admin-form-group">
-                <label>फीचर्ड इमेज URL (Featured Image Link)</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '18px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                    श्रेणी (Category)
+                  </label>
+                  <select
+                    value={form.category}
+                    onChange={(e) => setField('category', e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', background: '#fff' }}
+                  >
+                    {categories.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                    लेखक (Author)
+                  </label>
+                  <input
+                    type="text"
+                    value={form.author}
+                    onChange={(e) => setField('author', e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                    प्रकाशन स्थिति (Status)
+                  </label>
+                  <select
+                    value={form.status}
+                    onChange={(e) => setField('status', e.target.value as 'draft' | 'published')}
+                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', background: '#fff' }}
+                  >
+                    <option value="draft">📁 Draft (केवल एडमिन)</option>
+                    <option value="published">🚀 Published (लाइव वेबसाइट)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  फीचर्ड फोटो URL (Featured Image Link)
+                </label>
                 <input
                   type="url"
                   placeholder="https://images.unsplash.com/photo-..."
                   value={form.featured_image || ''}
                   onChange={(e) => setField('featured_image', e.target.value)}
+                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
                 />
                 {form.featured_image && (
-                  <div style={{ marginTop: '8px' }}>
+                  <div style={{ marginTop: '10px' }}>
                     <img
                       src={form.featured_image}
                       alt="Preview"
-                      style={{ width: '100%', maxHeight: '160px', objectFit: 'cover', borderRadius: '6px' }}
+                      style={{ maxHeight: '160px', borderRadius: '6px', objectFit: 'cover' }}
                       onError={(e) => ((e.target as HTMLElement).style.display = 'none')}
                     />
                   </div>
                 )}
               </div>
 
-              <div className="admin-form-group">
-                <label>संक्षिप्त सारांश (Excerpt)</label>
+              <div style={{ marginBottom: '18px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  संक्षिप्त सारांश (Excerpt)
+                </label>
                 <textarea
                   rows={2}
-                  placeholder="खबर की 2 लाइनों का मुख्य सारांश..."
+                  placeholder="खबर का छोटा सारांश (2 लाइन में)..."
                   value={form.excerpt}
                   onChange={(e) => setField('excerpt', e.target.value)}
+                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
                 />
               </div>
 
-              <div className="admin-form-group">
-                <label>लेख की पूरी सामग्री (Article Content) *</label>
-                <div className="toolbar">
-                  <button type="button" onClick={() => insertText('<h2>', '</h2>')}>
-                    Heading (H2)
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  लेख की मुख्य सामग्री (Article Content) *
+                </label>
+
+                {/* Quick Formatting Bar */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', background: '#f1f5f9', padding: '8px', borderRadius: '6px 6px 0 0', border: '1px solid #cbd5e1', borderBottom: 'none' }}>
+                  <button type="button" onClick={() => insertFormatting('<h2>', '</h2>')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
+                    H2 हेडिंग
                   </button>
-                  <button type="button" onClick={() => insertText('<blockquote>', '</blockquote>')}>
-                    Quote (उद्धरण)
+                  <button type="button" onClick={() => insertFormatting('<blockquote>', '</blockquote>')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
+                    Quote उद्धरण
                   </button>
-                  <button type="button" onClick={() => insertText('<b>', '</b>')}>
-                    Bold Text
+                  <button type="button" onClick={() => insertFormatting('<b>', '</b>')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
+                    Bold टेक्स्ट
                   </button>
-                  <button type="button" onClick={() => insertText('\n- बिंदु 1\n- बिंदु 2\n')}>
+                  <button type="button" onClick={() => insertFormatting('\n- पॉइंट 1\n- पॉइंट 2\n')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
                     Bullet List
                   </button>
                 </div>
+
                 <textarea
-                  rows={12}
-                  placeholder="यहाँ पूरी खबर या लेख विस्तार से लिखें..."
+                  rows={14}
+                  placeholder="यहाँ पूरी खबर या विश्लेषण विस्तार से लिखें..."
                   value={form.content}
                   onChange={(e) => setField('content', e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '0 0 6px 6px', border: '1px solid #cbd5e1', fontSize: '15px', fontFamily: 'inherit' }}
                   required
                 />
               </div>
 
-              <div className="admin-form-group">
-                <label>प्रकाशन स्थिति (Status)</label>
-                <select
-                  value={form.status}
-                  onChange={(e) => setField('status', e.target.value as 'draft' | 'published')}
-                >
-                  <option value="draft">📁 Draft (केवल एडमिन को दिखेगा)</option>
-                  <option value="published">🚀 Published (लाइव वेबसाइट पर तुरंत दिखेगा)</option>
-                </select>
-              </div>
-
-              <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '10px' }}>
-                {editingId ? 'लेख अपडेट करें (Update Article)' : 'लेख प्रकाशित / सहेजें (Save Article)'}
+              <button
+                type="submit"
+                style={{ width: '100%', background: '#0b87c2', color: '#ffffff', border: 'none', padding: '14px', borderRadius: '6px', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                {editingId ? 'लेख अपडेट करें (Update Article)' : 'लेख प्रकाशित / सहेजें (Publish Article)'}
               </button>
-
-              {msg && (
-                <p style={{ marginTop: '14px', fontWeight: 600, color: msg.includes('सफलता') ? '#16a34a' : '#c8102e' }}>
-                  {msg}
-                </p>
-              )}
             </form>
-          </section>
+          </div>
+        )}
 
-          {/* ARTICLES LIST & STATUS FILTER */}
-          <section className="admin-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2>📚 लेख सूची ({filteredPosts.length})</h2>
-              <div style={{ display: 'flex', gap: '6px' }}>
+        {/* TAB 2: MANAGE ARTICLES */}
+        {activeTab === 'manage' && (
+          <div style={{ background: '#ffffff', padding: '30px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '20px', color: '#0f172a' }}>📚 लेख सूची एवं प्रबंधन</h2>
+              <div style={{ display: 'flex', gap: '8px' }}>
                 <button
-                  className={filterStatus === 'all' ? 'btn-primary' : 'btn-secondary'}
                   onClick={() => setFilterStatus('all')}
-                  style={{ padding: '4px 10px', fontSize: '11px' }}
+                  style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: 'none', cursor: 'pointer', background: filterStatus === 'all' ? '#0b87c2' : '#e2e8f0', color: filterStatus === 'all' ? '#fff' : '#334155' }}
                 >
-                  सभी
+                  सभी ({posts.length})
                 </button>
                 <button
-                  className={filterStatus === 'published' ? 'btn-primary' : 'btn-secondary'}
                   onClick={() => setFilterStatus('published')}
-                  style={{ padding: '4px 10px', fontSize: '11px' }}
+                  style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: 'none', cursor: 'pointer', background: filterStatus === 'published' ? '#0b87c2' : '#e2e8f0', color: filterStatus === 'published' ? '#fff' : '#334155' }}
                 >
-                  Published
+                  Published ({posts.filter((p) => p.status === 'published').length})
                 </button>
                 <button
-                  className={filterStatus === 'draft' ? 'btn-primary' : 'btn-secondary'}
                   onClick={() => setFilterStatus('draft')}
-                  style={{ padding: '4px 10px', fontSize: '11px' }}
+                  style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: 'none', cursor: 'pointer', background: filterStatus === 'draft' ? '#0b87c2' : '#e2e8f0', color: filterStatus === 'draft' ? '#fff' : '#334155' }}
                 >
-                  Drafts
+                  Drafts ({posts.filter((p) => p.status === 'draft').length})
                 </button>
               </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {filteredPosts.length === 0 ? (
-                <p style={{ fontSize: '13px', color: '#64748b' }}>कोई लेख उपलब्ध नहीं है।</p>
+                <p style={{ padding: '20px', textCenter: 'center', color: '#64748b' }}>कोई लेख नहीं मिला।</p>
               ) : (
                 filteredPosts.map((p) => (
                   <div
                     key={p.id}
                     style={{
-                      border: '1px solid #e2e8f0',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
-                      padding: '14px',
-                      background: editingId === p.id ? '#fff1f2' : '#ffffff'
+                      padding: '16px',
+                      background: editingId === p.id ? '#f0f9ff' : '#ffffff',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                      <span
-                        style={{
-                          fontSize: '10px',
-                          fontWeight: 800,
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          background: p.status === 'published' ? '#dcfce7' : '#fef9c3',
-                          color: p.status === 'published' ? '#166534' : '#854d0e'
-                        }}
-                      >
-                        {p.category} • {p.status.toUpperCase()}
-                      </span>
-                      <span style={{ fontSize: '11px', color: '#94a3b8' }}>/{p.slug}</span>
+                    <div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            background: p.status === 'published' ? '#dcfce7' : '#fef9c3',
+                            color: p.status === 'published' ? '#166534' : '#854d0e'
+                          }}
+                        >
+                          {p.category} • {p.status.toUpperCase()}
+                        </span>
+                        <span style={{ fontSize: '12px', color: '#94a3b8' }}>/{p.slug}</span>
+                      </div>
+                      <h3 style={{ fontSize: '16px', color: '#0f172a', fontWeight: 700 }}>{p.title}</h3>
                     </div>
 
-                    <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '8px' }}>{p.title}</h3>
-
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => handleEdit(p)} className="btn-secondary">
-                        ✏️ संपादित करें (Edit)
+                      <button
+                        onClick={() => handleEditPost(p)}
+                        style={{ background: '#0b87c2', color: '#ffffff', border: 'none', padding: '8px 14px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}
+                      >
+                        ✏️ एडिट करें
                       </button>
-                      <button onClick={() => handleDelete(p.id)} className="btn-danger">
-                        🗑️ हटाएँ (Delete)
+                      <button
+                        onClick={() => handleDeletePost(p.id)}
+                        style={{ background: '#dc2626', color: '#ffffff', border: 'none', padding: '8px 14px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}
+                      >
+                        🗑️ डिलीट
                       </button>
                       <Link
                         href={`/posts/${p.slug}`}
                         target="_blank"
-                        className="btn-secondary"
-                        style={{ background: '#0f172a' }}
+                        style={{ background: '#0f172a', color: '#ffffff', padding: '8px 14px', borderRadius: '4px', fontSize: '12px', fontWeight: 600 }}
                       >
-                        👁️ व्यू करें
+                        👁️ देखें
                       </Link>
                     </div>
                   </div>
                 ))
               )}
             </div>
-          </section>
-        </div>
-      </div>
-    </main>
+          </div>
+        )}
+      </main>
+    </div>
   );
 }

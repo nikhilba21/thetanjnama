@@ -82,9 +82,6 @@ export default function Header() {
             <button className="search-btn" onClick={() => setSearchOpen(true)}>
               🔍 खोजें
             </button>
-            <Link href="/admin" className="admin-btn">
-              ⚙️ Admin CMS
-            </Link>
           </div>
         </div>
 
@@ -133,7 +130,6 @@ export default function Header() {
               <li><Link href="/contact" onClick={() => setMobileNavOpen(false)}>Contact Us</Link></li>
               <li><Link href="/privacy-policy" onClick={() => setMobileNavOpen(false)}>Privacy Policy</Link></li>
               <li><Link href="/disclaimer" onClick={() => setMobileNavOpen(false)}>Disclaimer</Link></li>
-              <li><Link href="/admin" onClick={() => setMobileNavOpen(false)}>Admin CMS</Link></li>
             </ul>
           </div>
         </div>
