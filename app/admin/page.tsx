@@ -16,6 +16,12 @@ type Post = {
   seo_description?: string | null;
 };
 
+type TickerItem = {
+  id: string;
+  text: string;
+  created_at?: string;
+};
+
 const categories = [
   'आज का तंज',
   'राष्ट्रीय',
@@ -50,8 +56,11 @@ export default function AdminPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  const [activeTab, setActiveTab] = useState<'editor' | 'manage'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'ticker' | 'manage'>('editor');
   const [posts, setPosts] = useState<Post[]>([]);
+  const [tickers, setTickers] = useState<TickerItem[]>([]);
+  const [newTickerText, setNewTickerText] = useState('');
+
   const [form, setForm] = useState<Post>(blankForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState('');
@@ -62,6 +71,7 @@ export default function AdminPage() {
     if (saved === 'true') {
       setIsAuthenticated(true);
       loadPosts();
+      loadTickers();
     }
   }, []);
 
@@ -78,6 +88,7 @@ export default function AdminPage() {
       setIsAuthenticated(true);
       setAuthError('');
       loadPosts();
+      loadTickers();
     } else {
       setAuthError('गलत Log ID या पासवर्ड! कृपया सही लॉगिन क्रेडेंशियल दर्ज करें।');
     }
@@ -94,6 +105,51 @@ export default function AdminPage() {
     }
   }
 
+  async function loadTickers() {
+    try {
+      const res = await fetch('/api/ticker');
+      if (res.ok) {
+        setTickers(await res.json());
+      }
+    } catch (e) {
+      console.error('Failed to fetch tickers:', e);
+    }
+  }
+
+  const handleAddTicker = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTickerText.trim()) return;
+
+    try {
+      const res = await fetch('/api/ticker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: newTickerText.trim() })
+      });
+
+      if (res.ok) {
+        setStatusMsg('🔴 नया ताजा अपडेट टिकर में जोड़ा गया!');
+        setNewTickerText('');
+        loadTickers();
+      }
+    } catch (e) {
+      setStatusMsg('❌ टिकर जोड़ने में त्रुटि।');
+    }
+  };
+
+  const handleDeleteTicker = async (id: string) => {
+    if (!confirm('क्या आप इस ताजा अपडेट को हटाना चाहते हैं?')) return;
+    try {
+      const res = await fetch(`/api/ticker?id=${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setStatusMsg('🗑️ अपडेट हटा दिया गया।');
+        loadTickers();
+      }
+    } catch (e) {
+      alert('अपडेट हटाने में त्रुटि।');
+    }
+  };
+
   const setField = (key: keyof Post, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
@@ -109,7 +165,6 @@ export default function AdminPage() {
     setField('slug', clean || `post-${Date.now().toString().slice(-6)}`);
   };
 
-  // Media File Upload Handler (FileReader -> Data URL)
   const handleFeaturedMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -123,7 +178,6 @@ export default function AdminPage() {
     }
   };
 
-  // Insert Media in Article Body
   const handleInsertBodyMedia = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -216,10 +270,10 @@ export default function AdminPage() {
         <div style={{ background: '#ffffff', width: 'min(440px, 100%)', padding: '36px', borderRadius: '12px', boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}>
           <div style={{ textAlign: 'center', marginBottom: '28px' }}>
             <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '28px', color: '#0f172a', letterSpacing: '1px' }}>
-              TANJ<span style={{ color: '#0b87c2' }}>NAMA</span>
+              TANJ<span style={{ color: 'var(--primary)' }}>NAMA</span>
             </h1>
             <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
-              Publishing & Media Console Login
+              Publishing & Editorial Console Login
             </p>
           </div>
 
@@ -269,7 +323,7 @@ export default function AdminPage() {
             <button
               type="submit"
               className="btn-primary"
-              style={{ width: '100%', padding: '12px', fontSize: '15px', background: '#0b87c2' }}
+              style={{ width: '100%', padding: '12px', fontSize: '15px' }}
             >
               लॉगिन करें (Secure Login)
             </button>
@@ -287,14 +341,14 @@ export default function AdminPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
       {/* Admin Top Navigation Header */}
-      <header style={{ background: '#0f172a', color: '#ffffff', padding: '16px 24px' }}>
+      <header style={{ background: '#000000', color: '#ffffff', padding: '16px 24px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ fontFamily: 'var(--font-serif)', fontSize: '22px', fontWeight: 800 }}>
-              TANJ<span style={{ color: '#0b87c2' }}>NAMA</span>
+              TANJ<span style={{ color: 'var(--primary)' }}>NAMA</span>
             </span>
-            <span style={{ background: '#1e293b', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', color: '#38bdf8', border: '1px solid #334155' }}>
-              Media CMS Console
+            <span style={{ background: '#111111', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', color: 'var(--primary)', border: '1px solid #333' }}>
+              Editorial Console
             </span>
           </div>
 
@@ -326,12 +380,29 @@ export default function AdminPage() {
               borderRadius: '6px',
               border: 'none',
               cursor: 'pointer',
-              background: activeTab === 'editor' ? '#0b87c2' : '#e2e8f0',
+              background: activeTab === 'editor' ? 'var(--primary)' : '#e2e8f0',
               color: activeTab === 'editor' ? '#ffffff' : '#334155'
             }}
           >
             ✏️ {editingId ? 'लेख व मीडिया संपादित करें' : 'नया लेख व मीडिया (Editor)'}
           </button>
+
+          <button
+            onClick={() => setActiveTab('ticker')}
+            style={{
+              padding: '10px 20px',
+              fontSize: '14px',
+              fontWeight: 700,
+              borderRadius: '6px',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeTab === 'ticker' ? 'var(--primary)' : '#e2e8f0',
+              color: activeTab === 'ticker' ? '#ffffff' : '#334155'
+            }}
+          >
+            🔴 ताजा अपडेट टिकर ({tickers.length})
+          </button>
+
           <button
             onClick={() => setActiveTab('manage')}
             style={{
@@ -341,7 +412,7 @@ export default function AdminPage() {
               borderRadius: '6px',
               border: 'none',
               cursor: 'pointer',
-              background: activeTab === 'manage' ? '#0b87c2' : '#e2e8f0',
+              background: activeTab === 'manage' ? 'var(--primary)' : '#e2e8f0',
               color: activeTab === 'manage' ? '#ffffff' : '#334155'
             }}
           >
@@ -395,7 +466,7 @@ export default function AdminPage() {
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>SEO URL Slug *</label>
-                    <button type="button" onClick={autoGenerateSlug} style={{ background: '#0b87c2', color: '#fff', border: 'none', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
+                    <button type="button" onClick={autoGenerateSlug} style={{ background: 'var(--primary)', color: '#fff', border: 'none', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>
                       Auto-Slug
                     </button>
                   </div>
@@ -454,8 +525,8 @@ export default function AdminPage() {
               </div>
 
               {/* DEDICATED MEDIA UPLOAD BOX */}
-              <div style={{ background: '#f8fafc', padding: '18px', borderRadius: '8px', border: '1px dashed #0b87c2', marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, color: '#0b87c2', marginBottom: '8px' }}>
+              <div style={{ background: '#fdf2f2', padding: '18px', borderRadius: '8px', border: '1px dashed var(--primary)', marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, color: 'var(--primary)', marginBottom: '8px' }}>
                   🖼️ मुख्य मीडिया अपलोड (Featured Image / Media Upload)
                 </label>
                 
@@ -544,7 +615,7 @@ export default function AdminPage() {
                     Bullet List
                   </button>
 
-                  <label style={{ background: '#0b87c2', color: '#fff', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}>
+                  <label style={{ background: 'var(--primary)', color: '#fff', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}>
                     📷 बॉडी में फोटो/मीडिया इन्सर्ट करें
                     <input type="file" accept="image/*" onChange={handleInsertBodyMedia} style={{ display: 'none' }} />
                   </label>
@@ -562,7 +633,7 @@ export default function AdminPage() {
 
               <button
                 type="submit"
-                style={{ width: '100%', background: '#0b87c2', color: '#ffffff', border: 'none', padding: '14px', borderRadius: '6px', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}
+                style={{ width: '100%', background: 'var(--primary)', color: '#ffffff', border: 'none', padding: '14px', borderRadius: '6px', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}
               >
                 {editingId ? 'लेख व मीडिया अपडेट करें (Update Article)' : 'लेख व मीडिया प्रकाशित / सहेजें (Publish Article)'}
               </button>
@@ -570,7 +641,71 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* TAB 2: MANAGE ARTICLES */}
+        {/* TAB 2: BREAKING TICKER MANAGEMENT */}
+        {activeTab === 'ticker' && (
+          <div style={{ background: '#ffffff', padding: '30px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+            <h2 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '10px' }}>
+              🔴 ताजा अपडेट (Breaking Ticker Headlines)
+            </h2>
+            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '24px' }}>
+              यहाँ आप मल्टीपल ताजा अपडेट जोड़ सकते हैं। यह अपडेट वेबसाइट पर ब्लिंकिंग रेड डॉट और ऑटो-स्क्रॉलिंग (Auto Scrolling Marquee) के साथ लगातार चलती रहेगी।
+            </p>
+
+            <form onSubmit={handleAddTicker} style={{ display: 'flex', gap: '12px', marginBottom: '30px' }}>
+              <input
+                type="text"
+                placeholder="नया ताजा अपडेट हेडलाइन लिखें (उदा. ⚡ बजट पर जनता की प्रतिक्रिया...)..."
+                value={newTickerText}
+                onChange={(e) => setNewTickerText(e.target.value)}
+                style={{ flex: 1, padding: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                required
+              />
+              <button
+                type="submit"
+                style={{ background: 'var(--primary)', color: '#fff', border: 'none', padding: '0 24px', borderRadius: '6px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                + ताजा अपडेट जोड़ें
+              </button>
+            </form>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <h3 style={{ fontSize: '16px', color: '#000', marginBottom: '8px' }}>
+                सक्रिय ताजा अपडेट्स लिस्ट ({tickers.length})
+              </h3>
+              {tickers.length === 0 ? (
+                <p style={{ color: '#64748b' }}>कोई ताजा अपडेट नहीं है।</p>
+              ) : (
+                tickers.map((item) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      background: '#fdf2f2',
+                      border: '1px solid #fecaca',
+                      padding: '14px 18px',
+                      borderRadius: '6px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span className="blinking-red-dot" style={{ background: 'var(--primary)' }}></span>
+                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#111' }}>{item.text}</span>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteTicker(item.id)}
+                      style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                    >
+                      🗑️ हटाएं
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: MANAGE ARTICLES */}
         {activeTab === 'manage' && (
           <div style={{ background: '#ffffff', padding: '30px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -578,19 +713,19 @@ export default function AdminPage() {
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   onClick={() => setFilterStatus('all')}
-                  style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: 'none', cursor: 'pointer', background: filterStatus === 'all' ? '#0b87c2' : '#e2e8f0', color: filterStatus === 'all' ? '#fff' : '#334155' }}
+                  style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: 'none', cursor: 'pointer', background: filterStatus === 'all' ? 'var(--primary)' : '#e2e8f0', color: filterStatus === 'all' ? '#fff' : '#334155' }}
                 >
                   सभी ({posts.length})
                 </button>
                 <button
                   onClick={() => setFilterStatus('published')}
-                  style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: 'none', cursor: 'pointer', background: filterStatus === 'published' ? '#0b87c2' : '#e2e8f0', color: filterStatus === 'published' ? '#fff' : '#334155' }}
+                  style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: 'none', cursor: 'pointer', background: filterStatus === 'published' ? 'var(--primary)' : '#e2e8f0', color: filterStatus === 'published' ? '#fff' : '#334155' }}
                 >
                   Published ({posts.filter((p) => p.status === 'published').length})
                 </button>
                 <button
                   onClick={() => setFilterStatus('draft')}
-                  style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: 'none', cursor: 'pointer', background: filterStatus === 'draft' ? '#0b87c2' : '#e2e8f0', color: filterStatus === 'draft' ? '#fff' : '#334155' }}
+                  style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: 'none', cursor: 'pointer', background: filterStatus === 'draft' ? 'var(--primary)' : '#e2e8f0', color: filterStatus === 'draft' ? '#fff' : '#334155' }}
                 >
                   Drafts ({posts.filter((p) => p.status === 'draft').length})
                 </button>
@@ -608,7 +743,7 @@ export default function AdminPage() {
                       border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '16px',
-                      background: editingId === p.id ? '#f0f9ff' : '#ffffff',
+                      background: editingId === p.id ? '#fdf2f2' : '#ffffff',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center'
@@ -636,7 +771,7 @@ export default function AdminPage() {
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button
                         onClick={() => handleEditPost(p)}
-                        style={{ background: '#0b87c2', color: '#ffffff', border: 'none', padding: '8px 14px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}
+                        style={{ background: 'var(--primary)', color: '#ffffff', border: 'none', padding: '8px 14px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}
                       >
                         ✏️ एडिट करें
                       </button>
@@ -649,7 +784,7 @@ export default function AdminPage() {
                       <Link
                         href={`/posts/${p.slug}`}
                         target="_blank"
-                        style={{ background: '#0f172a', color: '#ffffff', padding: '8px 14px', borderRadius: '4px', fontSize: '12px', fontWeight: 600 }}
+                        style={{ background: '#000000', color: '#ffffff', padding: '8px 14px', borderRadius: '4px', fontSize: '12px', fontWeight: 600 }}
                       >
                         👁️ देखें
                       </Link>

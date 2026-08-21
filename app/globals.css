@@ -197,15 +197,15 @@ a {
   font-weight: 800;
 }
 
-/* ===== BREAKING TICKER ===== */
-.breaking-ticker {
+/* ===== BREAKING TICKER MARQUEE & BLINKING RED DOT ===== */
+.breaking-ticker-wrapper {
   background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   margin-top: 14px;
 }
 
-.breaking-inner {
-  height: 42px;
+.breaking-inner-box {
+  height: 44px;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -213,25 +213,75 @@ a {
   border: 1px solid #fecaca;
   border-radius: 4px;
   padding: 0 12px;
+  overflow: hidden;
 }
 
-.ticker-badge {
+.ticker-label {
   background: var(--primary);
   color: #ffffff;
-  padding: 4px 10px;
+  padding: 4px 12px;
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
-  border-radius: 2px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(211, 16, 24, 0.25);
+  z-index: 2;
 }
 
-.ticker-text {
+.blinking-red-dot {
+  width: 9px;
+  height: 9px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  display: inline-block;
+  animation: redBlink 1.2s infinite ease-in-out;
+}
+
+@keyframes redBlink {
+  0% { transform: scale(0.85); opacity: 0.3; }
+  50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 8px #ffffff; }
+  100% { transform: scale(0.85); opacity: 0.3; }
+}
+
+.marquee-viewport {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  white-space: nowrap;
+}
+
+.marquee-track {
+  display: inline-flex;
+  gap: 40px;
+  white-space: nowrap;
+  animation: marqueeScroll 28s linear infinite;
+}
+
+.marquee-viewport:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-headline-item {
   font-size: 13px;
   color: #000000;
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ticker-bullet {
+  color: var(--primary);
+  font-size: 10px;
 }
 
 /* ===== PAGE LAYOUT ===== */

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
 import Header from '@/components/Header';
+import BreakingTicker from '@/components/BreakingTicker';
 import { CATEGORY_LIST } from '@/lib/categories';
 
 export const metadata: Metadata = {
@@ -55,14 +56,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <div id="outer-wrapper">
           <Header />
 
-          <div className="breaking-ticker">
-            <div className="container breaking-inner">
-              <span className="ticker-badge">🔴 ताजा अपडेट</span>
-              <span className="ticker-text">
-                TANJNAMA डिजिटल मंच पर आपका स्वागत है — सोच पर तंज, सच के साथ!
-              </span>
-            </div>
-          </div>
+          {/* Auto-scrolling Breaking News Ticker with Blinking Red Dot */}
+          <BreakingTicker />
 
           {children}
 

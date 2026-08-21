@@ -18,6 +18,12 @@ export type Post = {
   updated_at: string;
 };
 
+export type TickerItem = {
+  id: string;
+  text: string;
+  created_at: string;
+};
+
 const initialFallbackPosts: Post[] = [
   {
     id: 'f-1',
@@ -110,6 +116,12 @@ const initialFallbackPosts: Post[] = [
 ];
 
 let inMemoryPosts: Post[] = [...initialFallbackPosts];
+
+let inMemoryTicker: TickerItem[] = [
+  { id: 't-1', text: 'TANJNAMA डिजिटल मंच पर आपका स्वागत है — सोच पर तंज, सच के साथ!', created_at: new Date().toISOString() },
+  { id: 't-2', text: 'राजस्थान की सियासत में फिर तेज हुई हलचल, बड़े फैसले पर सबकी नजर।', created_at: new Date().toISOString() },
+  { id: 't-3', text: 'देश की राजनीति और सामाजिक मुद्दों पर तंजनामा का तीखा निष्पक्ष विश्लेषण।', created_at: new Date().toISOString() }
+];
 
 async function request(path: string, init: RequestInit = {}) {
   if (!base || !key) return null;
@@ -239,4 +251,48 @@ export async function searchPosts(query: string): Promise<Post[]> {
       p.category.toLowerCase().includes(q) ||
       p.content.toLowerCase().includes(q)
   );
+}
+
+// TICKER UPDATES FUNCTIONS
+export async function getTickerUpdates(): Promise<TickerItem[]> {
+  try {
+    const live = (await request('ticker_updates?order=created_at.desc')) as TickerItem[] | null;
+    if (live && live.length > 0) return live;
+  } catch (e) {
+    console.warn('Supabase ticker fetch failed, using memory:', e);
+  }
+  return inMemoryTicker;
+}
+
+export async function createTickerUpdate(text: string): Promise<TickerItem> {
+  const newItem: TickerItem = {
+    id: `ticker-${Date.now()}`,
+    text: text.trim(),
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    const res = await request('ticker_updates', {
+      method: 'POST',
+      body: JSON.stringify(newItem)
+    });
+    if (res && res[0]) return res[0];
+  } catch (e) {
+    console.warn('Supabase ticker save failed:', e);
+  }
+
+  inMemoryTicker.unshift(newItem);
+  return newItem;
+}
+
+export async function deleteTickerUpdate(id: string): Promise<boolean> {
+  try {
+    await request(`ticker_updates?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+    return true;
+  } catch (e) {
+    console.warn('Supabase ticker delete failed:', e);
+  }
+
+  inMemoryTicker = inMemoryTicker.filter((t) => t.id !== id);
+  return true;
 }
