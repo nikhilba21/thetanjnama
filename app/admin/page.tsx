@@ -70,7 +70,6 @@ export default function AdminPage() {
     const cleanUser = username.trim().toLowerCase();
     const cleanPass = password.trim();
 
-    // Log ID: admin or tanjnama, Password: tanjnama2026 or admin123
     if (
       (cleanUser === 'admin' || cleanUser === 'tanjnama' || cleanUser.length > 2) &&
       (cleanPass === 'tanjnama2026' || cleanPass === 'admin123' || cleanPass.length >= 4)
@@ -110,6 +109,37 @@ export default function AdminPage() {
     setField('slug', clean || `post-${Date.now().toString().slice(-6)}`);
   };
 
+  // Media File Upload Handler (FileReader -> Data URL)
+  const handleFeaturedMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (uploadEvent) => {
+        const dataUrl = uploadEvent.target?.result as string;
+        setField('featured_image', dataUrl);
+        setStatusMsg(`📷 मीडिया "${file.name}" अपलोड हो गया!`);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Insert Media in Article Body
+  const handleInsertBodyMedia = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (uploadEvent) => {
+        const dataUrl = uploadEvent.target?.result as string;
+        setForm((prev) => ({
+          ...prev,
+          content: prev.content + `\n<img src="${dataUrl}" alt="Media" class="article-image" />\n`
+        }));
+        setStatusMsg(`📷 बॉडी मीडिया "${file.name}" इंसर्ट हुआ!`);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const insertFormatting = (tagStart: string, tagEnd: string = '') => {
     setForm((prev) => ({
       ...prev,
@@ -132,7 +162,7 @@ export default function AdminPage() {
       });
 
       if (res.ok) {
-        setStatusMsg(editingId ? '✅ लेख सफलतापूर्वक अपडेट हुआ!' : '🚀 नया लेख सफलतापूर्वक प्रकाशित हुआ!');
+        setStatusMsg(editingId ? '✅ लेख सफलतापूर्वक अपडेट हुआ!' : '🚀 नया लेख व मीडिया सफलतापूर्वक प्रकाशित हुआ!');
         setForm(blankForm);
         setEditingId(null);
         loadPosts();
@@ -189,7 +219,7 @@ export default function AdminPage() {
               TANJ<span style={{ color: '#0b87c2' }}>NAMA</span>
             </h1>
             <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
-              Publishing & Editorial Console Login
+              Publishing & Media Console Login
             </p>
           </div>
 
@@ -264,7 +294,7 @@ export default function AdminPage() {
               TANJ<span style={{ color: '#0b87c2' }}>NAMA</span>
             </span>
             <span style={{ background: '#1e293b', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', color: '#38bdf8', border: '1px solid #334155' }}>
-              Editorial Console
+              Media CMS Console
             </span>
           </div>
 
@@ -300,7 +330,7 @@ export default function AdminPage() {
               color: activeTab === 'editor' ? '#ffffff' : '#334155'
             }}
           >
-            ✏️ {editingId ? 'लेख संपादित करें' : 'नया लेख लिखें (Editor)'}
+            ✏️ {editingId ? 'लेख व मीडिया संपादित करें' : 'नया लेख व मीडिया (Editor)'}
           </button>
           <button
             onClick={() => setActiveTab('manage')}
@@ -325,12 +355,12 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* TAB 1: ARTICLE EDITOR */}
+        {/* TAB 1: ARTICLE & MEDIA EDITOR */}
         {activeTab === 'editor' && (
           <div style={{ background: '#ffffff', padding: '30px', borderRadius: '8px', border: '1px solid #cbd5e1', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h2 style={{ fontSize: '20px', color: '#0f172a' }}>
-                {editingId ? '✏️ लेख संपादन (Edit Post)' : '✍️ नया लेख बनाएं (Create Post)'}
+                {editingId ? '✏️ लेख व मीडिया संपादन (Edit Post)' : '✍️ नया लेख व मीडिया अपलोड (Create Post)'}
               </h2>
               {editingId && (
                 <button
@@ -423,25 +453,60 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div style={{ marginBottom: '18px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-                  फीचर्ड फोटो URL (Featured Image Link)
+              {/* DEDICATED MEDIA UPLOAD BOX */}
+              <div style={{ background: '#f8fafc', padding: '18px', borderRadius: '8px', border: '1px dashed #0b87c2', marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, color: '#0b87c2', marginBottom: '8px' }}>
+                  🖼️ मुख्य मीडिया अपलोड (Featured Image / Media Upload)
                 </label>
-                <input
-                  type="url"
-                  placeholder="https://images.unsplash.com/photo-..."
-                  value={form.featured_image || ''}
-                  onChange={(e) => setField('featured_image', e.target.value)}
-                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
-                />
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'center' }}>
+                  <div>
+                    <span style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+                      📁 ऑप्शन A: कंप्यूटर / मोबाइल से मीडिया चुनें
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*,video/*"
+                      onChange={handleFeaturedMediaUpload}
+                      style={{ fontSize: '13px', width: '100%' }}
+                    />
+                  </div>
+
+                  <div>
+                    <span style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+                      🔗 ऑप्शन B: या मीडिया URL पेस्ट करें
+                    </span>
+                    <input
+                      type="url"
+                      placeholder="https://images.unsplash.com/..."
+                      value={form.featured_image || ''}
+                      onChange={(e) => setField('featured_image', e.target.value)}
+                      style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                    />
+                  </div>
+                </div>
+
+                {/* LIVE MEDIA PREVIEW */}
                 {form.featured_image && (
-                  <div style={{ marginTop: '10px' }}>
+                  <div style={{ marginTop: '14px', background: '#ffffff', padding: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', display: 'flex', gap: '16px', alignItems: 'center' }}>
                     <img
                       src={form.featured_image}
-                      alt="Preview"
-                      style={{ maxHeight: '160px', borderRadius: '6px', objectFit: 'cover' }}
+                      alt="Featured Media Preview"
+                      style={{ height: '90px', width: '140px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0' }}
                       onError={(e) => ((e.target as HTMLElement).style.display = 'none')}
                     />
+                    <div>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#166534', display: 'block', marginBottom: '4px' }}>
+                        ✅ मीडिया अटैच हो गया है
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setField('featured_image', '')}
+                        style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}
+                      >
+                        🗑️ मीडिया हटाएँ
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -464,8 +529,8 @@ export default function AdminPage() {
                   लेख की मुख्य सामग्री (Article Content) *
                 </label>
 
-                {/* Quick Formatting Bar */}
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', background: '#f1f5f9', padding: '8px', borderRadius: '6px 6px 0 0', border: '1px solid #cbd5e1', borderBottom: 'none' }}>
+                {/* Quick Formatting & Media Bar */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', background: '#f1f5f9', padding: '8px', borderRadius: '6px 6px 0 0', border: '1px solid #cbd5e1', borderBottom: 'none', alignItems: 'center' }}>
                   <button type="button" onClick={() => insertFormatting('<h2>', '</h2>')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
                     H2 हेडिंग
                   </button>
@@ -478,6 +543,11 @@ export default function AdminPage() {
                   <button type="button" onClick={() => insertFormatting('\n- पॉइंट 1\n- पॉइंट 2\n')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
                     Bullet List
                   </button>
+
+                  <label style={{ background: '#0b87c2', color: '#fff', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}>
+                    📷 बॉडी में फोटो/मीडिया इन्सर्ट करें
+                    <input type="file" accept="image/*" onChange={handleInsertBodyMedia} style={{ display: 'none' }} />
+                  </label>
                 </div>
 
                 <textarea
@@ -494,7 +564,7 @@ export default function AdminPage() {
                 type="submit"
                 style={{ width: '100%', background: '#0b87c2', color: '#ffffff', border: 'none', padding: '14px', borderRadius: '6px', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}
               >
-                {editingId ? 'लेख अपडेट करें (Update Article)' : 'लेख प्रकाशित / सहेजें (Publish Article)'}
+                {editingId ? 'लेख व मीडिया अपडेट करें (Update Article)' : 'लेख व मीडिया प्रकाशित / सहेजें (Publish Article)'}
               </button>
             </form>
           </div>
