@@ -21,6 +21,9 @@ const initialCategories: CategoryItem[] = [
 
 let inMemoryCategories: CategoryItem[] = [...initialCategories];
 
+export const CATEGORY_LIST: CategoryItem[] = initialCategories;
+
+
 export function getCategories(includeInactive = false): CategoryItem[] {
   if (includeInactive) return inMemoryCategories;
   return inMemoryCategories.filter((c) => c.active);

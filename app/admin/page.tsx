@@ -682,8 +682,8 @@ export default function AdminPage() {
                     onChange={(e) => setField('category', e.target.value)}
                     style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', background: '#fff' }}
                   >
-                    {(categories.length > 0 ? categories : categories.map(c => ({ name: c, slug: c }))).map((c) => (
-                      <option key={c.slug || c.name} value={c.name}>{c.name}</option>
+                    {categories.map((c) => (
+                      <option key={c.id || c.slug} value={c.name}>{c.name}</option>
                     ))}
                   </select>
                 </div>
