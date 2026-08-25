@@ -14,6 +14,7 @@ const defaultItems: TickerItem[] = [
 
 export default function BreakingTicker() {
   const [items, setItems] = useState<TickerItem[]>(defaultItems);
+  const [isActive, setIsActive] = useState<boolean>(true);
 
   useEffect(() => {
     async function loadTicker() {
@@ -21,8 +22,11 @@ export default function BreakingTicker() {
         const res = await fetch('/api/ticker');
         if (res.ok) {
           const data = await res.json();
-          if (data && data.length > 0) {
-            setItems(data);
+          if (typeof data.active === 'boolean') {
+            setIsActive(data.active);
+          }
+          if (data.items && data.items.length > 0) {
+            setItems(data.items);
           }
         }
       } catch (e) {
@@ -31,6 +35,11 @@ export default function BreakingTicker() {
     }
     loadTicker();
   }, []);
+
+  // Hides ticker completely if admin has deactivated it or no items exist
+  if (!isActive || items.length === 0) {
+    return null;
+  }
 
   return (
     <div className="breaking-ticker-wrapper">
@@ -44,7 +53,7 @@ export default function BreakingTicker() {
         {/* Auto Scrolling Marquee Track */}
         <div className="marquee-viewport">
           <div className="marquee-track">
-            {/* Render 2 duplicates for seamless looping marquee */}
+            {/* Render duplicates for seamless looping marquee */}
             {[...items, ...items].map((item, index) => (
               <span key={`${item.id}-${index}`} className="ticker-headline-item">
                 <span className="ticker-bullet">✦</span> {item.text}

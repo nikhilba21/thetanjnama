@@ -2,13 +2,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CATEGORY_LIST } from '@/lib/categories';
+import { CATEGORY_LIST, CategoryItem } from '@/lib/categories';
 
 export default function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentDate, setCurrentDate] = useState('');
+  const [categories, setCategories] = useState<CategoryItem[]>(CATEGORY_LIST);
   const router = useRouter();
 
   useEffect(() => {
@@ -19,6 +20,22 @@ export default function Header() {
       day: 'numeric'
     };
     setCurrentDate(new Date().toLocaleDateString('hi-IN', options));
+
+    // Fetch active categories dynamically
+    async function loadActiveCategories() {
+      try {
+        const res = await fetch('/api/categories');
+        if (res.ok) {
+          const list: CategoryItem[] = await res.json();
+          if (list && list.length > 0) {
+            setCategories(list);
+          }
+        }
+      } catch (e) {
+        console.warn('Category fetch error on header');
+      }
+    }
+    loadActiveCategories();
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -81,7 +98,7 @@ export default function Header() {
                   🏠 होम
                 </Link>
               </li>
-              {CATEGORY_LIST.map((c) => (
+              {categories.map((c) => (
                 <li key={c.slug}>
                   <Link href={`/category/${c.slug}`} className="nav-link">
                     {c.name}
@@ -103,7 +120,7 @@ export default function Header() {
             </div>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <li><Link href="/" onClick={() => setMobileNavOpen(false)}>🏠 होम</Link></li>
-              {CATEGORY_LIST.map((c) => (
+              {categories.map((c) => (
                 <li key={c.slug}>
                   <Link href={`/category/${c.slug}`} onClick={() => setMobileNavOpen(false)}>
                     {c.name}

@@ -24,19 +24,12 @@ type TickerItem = {
   created_at?: string;
 };
 
-const categories = [
-  'आज का तंज',
-  'राष्ट्रीय',
-  'राजस्थान',
-  'राजनीति',
-  'समाज',
-  'विश्लेषण',
-  'Data Story',
-  'Editorial',
-  'Fact Check',
-  'नागरिक पत्रकारिता',
-  'Videos'
-];
+type CategoryItem = {
+  id: string;
+  name: string;
+  slug: string;
+  active: boolean;
+};
 
 const blankForm: Post = {
   title: '',
@@ -58,10 +51,15 @@ export default function AdminPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  const [activeTab, setActiveTab] = useState<'editor' | 'ticker' | 'manage'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'categories' | 'ticker' | 'manage'>('editor');
   const [posts, setPosts] = useState<Post[]>([]);
   const [tickers, setTickers] = useState<TickerItem[]>([]);
+  const [isTickerActive, setIsTickerActive] = useState<boolean>(true);
   const [newTickerText, setNewTickerText] = useState('');
+
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [newCatName, setNewCatName] = useState('');
+  const [newCatSlug, setNewCatSlug] = useState('');
 
   const [form, setForm] = useState<Post>(blankForm);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -74,6 +72,7 @@ export default function AdminPage() {
       setIsAuthenticated(true);
       loadPosts();
       loadTickers();
+      loadCategories();
     }
   }, []);
 
@@ -91,12 +90,79 @@ export default function AdminPage() {
       setAuthError('');
       loadPosts();
       loadTickers();
+      loadCategories();
     } else {
       setAuthError('गलत Log ID या पासवर्ड! कृपया सही लॉगिन क्रेडेंशियल दर्ज करें।');
     }
   };
 
-  // LOAD POSTS (API + LocalStorage Sync)
+  // LOAD CATEGORIES
+  async function loadCategories() {
+    try {
+      const res = await fetch('/api/categories?admin=true');
+      if (res.ok) {
+        setCategories(await res.json());
+      }
+    } catch (e) {
+      console.error('Failed to fetch categories:', e);
+    }
+  }
+
+  // ADD CATEGORY
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+
+    try {
+      const res = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newCatName.trim(), slug: newCatSlug.trim() })
+      });
+
+      if (res.ok) {
+        setStatusMsg(`🏷️ नई श्रेणी "${newCatName}" जोड़ी गई!`);
+        setNewCatName('');
+        setNewCatSlug('');
+        loadCategories();
+      }
+    } catch (e) {
+      setStatusMsg('❌ श्रेणी जोड़ने में त्रुटि।');
+    }
+  };
+
+  // TOGGLE CATEGORY ACTIVE / INACTIVE
+  const handleToggleCategoryActive = async (id: string) => {
+    try {
+      const res = await fetch('/api/categories', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) {
+        setStatusMsg('🏷️ श्रेणी स्टेटस अपडेट हुआ!');
+        loadCategories();
+      }
+    } catch (e) {
+      alert('अपडेट में त्रुटि');
+    }
+  };
+
+  // DELETE CATEGORY
+  const handleDeleteCategory = async (id: string) => {
+    if (!confirm('क्या आप इस श्रेणी को हटाना चाहते हैं?')) return;
+    try {
+      const res = await fetch(`/api/categories?id=${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setStatusMsg('🗑️ श्रेणी हटा दी गई।');
+        loadCategories();
+      }
+    } catch (e) {
+      alert('हटाने में त्रुटि');
+    }
+  };
+
+  // LOAD POSTS
   async function loadPosts() {
     let combined: Post[] = [];
     try {
@@ -109,7 +175,6 @@ export default function AdminPage() {
       console.warn('API fetch error, relying on local storage');
     }
 
-    // Merge with LocalStorage
     try {
       const localStr = localStorage.getItem('tanjnama_local_articles');
       if (localStr) {
@@ -120,14 +185,11 @@ export default function AdminPage() {
           }
         });
       }
-    } catch (e) {
-      console.warn('Localstorage parse error');
-    }
+    } catch (e) {}
 
     setPosts(combined);
   }
 
-  // SAVE LOCAL POSTS BACKUP
   const saveLocalPostBackup = (postToSave: Post) => {
     try {
       const existingStr = localStorage.getItem('tanjnama_local_articles');
@@ -140,21 +202,47 @@ export default function AdminPage() {
         existingList.unshift(postToSave);
       }
       localStorage.setItem('tanjnama_local_articles', JSON.stringify(existingList));
-    } catch (e) {
-      console.warn('LocalStorage save warning:', e);
-    }
+    } catch (e) {}
   };
 
+  // LOAD TICKERS & STATUS
   async function loadTickers() {
     try {
       const res = await fetch('/api/ticker');
       if (res.ok) {
-        setTickers(await res.json());
+        const data = await res.json();
+        if (typeof data.active === 'boolean') {
+          setIsTickerActive(data.active);
+        }
+        if (data.items) {
+          setTickers(data.items);
+        }
       }
     } catch (e) {
       console.error('Failed to fetch tickers:', e);
     }
   }
+
+  // TOGGLE TICKER ACTIVE / DEACTIVE MASTER SWITCH
+  const handleToggleTickerMaster = async (targetActive: boolean) => {
+    try {
+      const res = await fetch('/api/ticker', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: targetActive })
+      });
+      if (res.ok) {
+        setIsTickerActive(targetActive);
+        setStatusMsg(
+          targetActive
+            ? '🔴 ताजा अपडेट टिकर सक्रिय (ON) कर दिया गया है! वेबसाइट पर दिखेगा।'
+            : '❌ ताजा अपडेट टिकर निष्क्रिय (OFF) कर दिया गया है! वेबसाइट से हट गया।'
+        );
+      }
+    } catch (e) {
+      alert('टिकर स्टेटस बदलने में त्रुटि');
+    }
+  };
 
   const handleAddTicker = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,7 +293,6 @@ export default function AdminPage() {
     setField('slug', clean || `post-${Date.now().toString().slice(-6)}`);
   };
 
-  // Compress & Resize Uploaded Image (Max 900px width, 80% JPEG quality)
   const compressAndUploadMedia = (file: File, callback: (compressedDataUrl: string) => void) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -237,7 +324,7 @@ export default function AdminPage() {
   const handleFeaturedMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setStatusMsg('⏳ मीडिया प्रोसेस और कम्प्रेस हो रहा है...');
+      setStatusMsg('⏳ मीडिया प्रोसेस हो रहा है...');
       compressAndUploadMedia(file, (dataUrl) => {
         setField('featured_image', dataUrl);
         setStatusMsg(`📷 मीडिया "${file.name}" सफलतापूर्वक अटैच हो गया!`);
@@ -283,7 +370,6 @@ export default function AdminPage() {
       created_at: new Date().toISOString()
     };
 
-    // Save in LocalStorage immediately as failsafe
     saveLocalPostBackup(postPayload);
 
     try {
@@ -325,7 +411,6 @@ export default function AdminPage() {
     if (!id) return;
     if (!confirm('क्या आप वाकई इस लेख को हमेशा के लिए हटाना चाहते हैं?')) return;
 
-    // Remove from LocalStorage
     try {
       const existingStr = localStorage.getItem('tanjnama_local_articles');
       if (existingStr) {
@@ -460,7 +545,7 @@ export default function AdminPage() {
       {/* Admin Main Container */}
       <main style={{ maxWidth: '1200px', margin: '24px auto', padding: '0 20px 60px' }}>
         {/* Navigation Tabs */}
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', borderBottom: '2px solid #e2e8f0', paddingBottom: '8px' }}>
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', borderBottom: '2px solid #e2e8f0', paddingBottom: '8px', flexWrap: 'wrap' }}>
           <button
             onClick={() => setActiveTab('editor')}
             style={{
@@ -475,6 +560,22 @@ export default function AdminPage() {
             }}
           >
             ✏️ {editingId ? 'लेख व मीडिया संपादित करें' : 'नया लेख व मीडिया (Editor)'}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('categories')}
+            style={{
+              padding: '10px 20px',
+              fontSize: '14px',
+              fontWeight: 700,
+              borderRadius: '6px',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeTab === 'categories' ? 'var(--primary)' : '#e2e8f0',
+              color: activeTab === 'categories' ? '#ffffff' : '#334155'
+            }}
+          >
+            🏷️ कैटेगरी मैनेजर ({categories.length})
           </button>
 
           <button
@@ -581,8 +682,8 @@ export default function AdminPage() {
                     onChange={(e) => setField('category', e.target.value)}
                     style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', background: '#fff' }}
                   >
-                    {categories.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                    {(categories.length > 0 ? categories : categories.map(c => ({ name: c, slug: c }))).map((c) => (
+                      <option key={c.slug || c.name} value={c.name}>{c.name}</option>
                     ))}
                   </select>
                 </div>
@@ -731,16 +832,168 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* TAB 2: BREAKING TICKER MANAGEMENT */}
+        {/* TAB 2: CATEGORY MANAGER */}
+        {activeTab === 'categories' && (
+          <div style={{ background: '#ffffff', padding: '30px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+            <h2 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '8px' }}>
+              🏷️ श्रेणी प्रबंधन (Category Manager)
+            </h2>
+            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '24px' }}>
+              यहाँ से नई श्रेणी जोड़ें, किसी भी श्रेणी को सक्रिय / निष्क्रिय (Active / Deactive) करें या डिलीट करें।
+            </p>
+
+            {/* ADD CATEGORY FORM */}
+            <form onSubmit={handleAddCategory} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 140px', gap: '12px', marginBottom: '30px', background: '#f8fafc', padding: '16px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                  श्रेणी का नाम (Category Name) *
+                </label>
+                <input
+                  type="text"
+                  placeholder="उदा. खेल समाचार"
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                  English URL Slug (ऑप्शनल)
+                </label>
+                <input
+                  type="text"
+                  placeholder="sports-news"
+                  value={newCatSlug}
+                  onChange={(e) => setNewCatSlug(e.target.value)}
+                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                <button
+                  type="submit"
+                  style={{ width: '100%', height: '42px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}
+                >
+                  + श्रेणी जोड़ें
+                </button>
+              </div>
+            </form>
+
+            {/* CATEGORIES LIST WITH ACTIVE / DEACTIVE TOGGLE */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <h3 style={{ fontSize: '16px', color: '#000', marginBottom: '8px' }}>
+                सभी श्रेणियां लिस्ट ({categories.length})
+              </h3>
+
+              {categories.map((cat) => (
+                <div
+                  key={cat.id}
+                  style={{
+                    background: cat.active ? '#ffffff' : '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    padding: '14px 18px',
+                    borderRadius: '6px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    opacity: cat.active ? 1 : 0.65
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <span
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: 800,
+                        background: cat.active ? '#dcfce7' : '#fee2e2',
+                        color: cat.active ? '#166534' : '#991b1b'
+                      }}
+                    >
+                      {cat.active ? 'ACTIVE' : 'INACTIVE'}
+                    </span>
+                    <div>
+                      <strong style={{ fontSize: '15px', color: '#000' }}>{cat.name}</strong>
+                      <span style={{ fontSize: '12px', color: '#64748b', marginLeft: '10px' }}>
+                        /category/{cat.slug}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => handleToggleCategoryActive(cat.id)}
+                      style={{
+                        background: cat.active ? '#16a34a' : '#475569',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '6px 14px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: 700
+                      }}
+                    >
+                      {cat.active ? '✅ सक्रिय (ON)' : '❌ निष्क्रिय (OFF)'}
+                    </button>
+
+                    <button
+                      onClick={() => handleDeleteCategory(cat.id)}
+                      style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                    >
+                      🗑️ हटाएं
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: BREAKING TICKER MANAGEMENT & MASTER TOGGLE */}
         {activeTab === 'ticker' && (
           <div style={{ background: '#ffffff', padding: '30px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
             <h2 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '10px' }}>
-              🔴 ताजा अपडेट (Breaking Ticker Headlines)
+              🔴 ताजा अपडेट (Breaking Ticker Headlines & Toggle)
             </h2>
             <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '24px' }}>
-              यहाँ आप मल्टीपल ताजा अपडेट जोड़ सकते हैं। यह अपडेट वेबसाइट पर ब्लिंकिंग रेड डॉट और ऑटो-स्क्रॉलिंग (Auto Scrolling Marquee) के साथ लगातार चलती रहेगी।
+              यहाँ से आप ताजा अपडेट पट्टी को पूरी वेबसाइट पर चालू या बंद (ON / OFF) कर सकते हैं और नयी हेडलाइन्स जोड़ सकते हैं।
             </p>
 
+            {/* MASTER TICKER STATUS TOGGLE SWITCH */}
+            <div style={{ background: isTickerActive ? '#fdf2f2' : '#f1f5f9', border: `2px solid ${isTickerActive ? 'var(--primary)' : '#94a3b8'}`, padding: '20px', borderRadius: '8px', marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ fontSize: '16px', color: '#000', marginBottom: '4px' }}>
+                  🔴 ताजा अपडेट टिकर पट्टी मास्टर स्विच
+                </h3>
+                <p style={{ fontSize: '13px', color: '#475569' }}>
+                  {isTickerActive
+                    ? 'स्थिति: ✅ सक्रिय (ON) — वेबसाइट पर ब्लिंकिंग रेड डॉट और ऑटो-स्क्रॉलिंग हेडलाइन्स दिख रही हैं।'
+                    : 'स्थिति: ❌ निष्क्रिय (OFF) — वेबसाइट पर से ताजा अपडेट की पूरी पट्टी हटा दी गई है।'}
+                </p>
+              </div>
+
+              <button
+                onClick={() => handleToggleTickerMaster(!isTickerActive)}
+                style={{
+                  background: isTickerActive ? '#dc2626' : '#16a34a',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '10px 24px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                }}
+              >
+                {isTickerActive ? '❌ टिकर बंद करें (Deactive)' : '✅ टिकर चालू करें (Active)'}
+              </button>
+            </div>
+
+            {/* ADD TICKER FORM */}
             <form onSubmit={handleAddTicker} style={{ display: 'flex', gap: '12px', marginBottom: '30px' }}>
               <input
                 type="text"
@@ -795,7 +1048,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* TAB 3: MANAGE ARTICLES */}
+        {/* TAB 4: MANAGE ARTICLES */}
         {activeTab === 'manage' && (
           <div style={{ background: '#ffffff', padding: '30px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>

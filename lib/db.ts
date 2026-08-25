@@ -296,3 +296,17 @@ export async function deleteTickerUpdate(id: string): Promise<boolean> {
   inMemoryTicker = inMemoryTicker.filter((t) => t.id !== id);
   return true;
 }
+
+let isTickerActive = true;
+
+export function getTickerStatus(): { active: boolean; items: TickerItem[] } {
+  return {
+    active: isTickerActive,
+    items: inMemoryTicker
+  };
+}
+
+export function setTickerStatus(active: boolean): boolean {
+  isTickerActive = active;
+  return isTickerActive;
+}
