@@ -75,6 +75,11 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const adsenseClientId =
+    process.env.ADSENSE_CLIENT ||
+    process.env.NEXT_PUBLIC_ADSENSE_CLIENT ||
+    'ca-pub-3935952599641519';
+
   // JSON-LD Structured Data Schema for Google Search
   const jsonLdSchema = {
     '@context': 'https://schema.org',
@@ -117,7 +122,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="hi">
       <head>
-        <meta name="google-adsense-account" content="ca-pub-3935952599641519" />
+        <meta name="google-adsense-account" content={adsenseClientId} />
         <meta name="google-site-verification" content="Do016rt6M0nMAw7LnXzML-_okC72nLhOSgp6kwZvYxU" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -149,7 +154,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
 
         <script
           async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3935952599641519"
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
           crossOrigin="anonymous"
         ></script>
       </head>
