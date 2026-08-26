@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AdSense from '@/components/AdSense';
 import { CATEGORY_LIST } from '@/lib/categories';
+import AajKaSawalWidget from '@/components/AajKaSawalWidget';
 
 export type Post = {
   id: string;
@@ -169,6 +170,9 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
 
       {/* SIDEBAR */}
       <aside className="sidebar">
+        {/* AAJ KA SAWAL LIVE POLL WIDGET */}
+        <AajKaSawalWidget />
+
         {/* SIDEBAR ADSENSE WIDGET */}
         <div className="sidebar-widget">
           <AdSense slot="sidebar-home" format="auto" />
