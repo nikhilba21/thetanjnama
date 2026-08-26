@@ -42,9 +42,12 @@ type PollResponse = {
   id: string;
   poll_id: string;
   user_name: string;
-  user_contact: string;
+  city_district: string;
   selected_option: string;
   user_opinion: string;
+  solution_idea: string;
+  publish_consent: string;
+  mobile_number: string;
   submitted_at: string;
 };
 
@@ -85,6 +88,7 @@ export default function AdminPage() {
   const [pollOption1, setPollOption1] = useState('');
   const [pollOption2, setPollOption2] = useState('');
   const [pollOption3, setPollOption3] = useState('');
+  const [pollOption4, setPollOption4] = useState('');
   const [isPollActive, setIsPollActive] = useState(true);
 
   const [form, setForm] = useState<Post>(blankForm);
@@ -133,9 +137,10 @@ export default function AdminPage() {
         if (data.poll) {
           setPoll(data.poll);
           setPollQuestionText(data.poll.question);
-          setPollOption1(data.poll.options[0] || '');
-          setPollOption2(data.poll.options[1] || '');
-          setPollOption3(data.poll.options[2] || '');
+          setPollOption1(data.poll.options[0] || 'बहुत महत्वपूर्ण');
+          setPollOption2(data.poll.options[1] || 'महत्वपूर्ण');
+          setPollOption3(data.poll.options[2] || 'कम महत्वपूर्ण');
+          setPollOption4(data.poll.options[3] || 'महत्वपूर्ण नहीं');
           setIsPollActive(data.poll.active);
         }
       }
@@ -154,7 +159,7 @@ export default function AdminPage() {
     e.preventDefault();
     if (!pollQuestionText.trim()) return;
 
-    const options = [pollOption1, pollOption2, pollOption3].map((o) => o.trim()).filter(Boolean);
+    const options = [pollOption1, pollOption2, pollOption3, pollOption4].map((o) => o.trim()).filter(Boolean);
 
     try {
       const res = await fetch('/api/poll', {
@@ -168,7 +173,7 @@ export default function AdminPage() {
       });
 
       if (res.ok) {
-        setStatusMsg('❓ "आज का सवाल" सफलतापूर्वक अपडेट कर दिया गया!');
+        setStatusMsg('❓ "आज का सवाल" और इसके विकल्प सफलतापूर्वक सहेजे गए!');
         loadPollManager();
       }
     } catch (e) {
@@ -189,8 +194,8 @@ export default function AdminPage() {
         setIsPollActive(targetActive);
         setStatusMsg(
           targetActive
-            ? '✅ "आज का सवाल" सक्रिय (ON) कर दिया गया! वेबसाइट पर दिखेगा।'
-            : '❌ "आज का सवाल" निष्क्रिय (OFF) कर दिया गया! वेबसाइट से हट गया।'
+            ? '✅ "आज का सवाल" फॉर्म सक्रिय (ON) कर दिया गया! वेबसाइट पर दिखेगा।'
+            : '❌ "आज का सवाल" फॉर्म निष्क्रिय (OFF) कर दिया गया! वेबसाइट से हट गया।'
         );
       }
     } catch (e) {
@@ -1090,10 +1095,10 @@ export default function AdminPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div>
                 <h2 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '4px' }}>
-                  ❓ "आज का सवाल" (Question of the Day & Live Poll Manager)
+                  ❓ "आज का सवाल" (Custom Form Builder & Submissions)
                 </h2>
                 <p style={{ fontSize: '13px', color: '#64748b' }}>
-                  यहाँ से वेबसाइट पर नया सवाल सेट करें और पाठकों के प्राप्त जवाब (Submissions) देखें।
+                  यहाँ से वेबसाइट का नया सवाल व विकल्प बदलें और पाठकों के प्राप्त उत्तर (7 Fields Submissions) देखें।
                 </p>
               </div>
 
@@ -1110,7 +1115,7 @@ export default function AdminPage() {
                   cursor: 'pointer'
                 }}
               >
-                {isPollActive ? '❌ सवाल विजेट बंद करें (Deactive)' : '✅ सवाल विजेट चालू करें (Active)'}
+                {isPollActive ? '❌ सवाल फॉर्म बंद करें (Deactive)' : '✅ सवाल फॉर्म चालू करें (Active)'}
               </button>
             </div>
 
@@ -1118,19 +1123,19 @@ export default function AdminPage() {
             <form onSubmit={handleSavePollQuestion} style={{ background: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '32px' }}>
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-                  आज का सवाल (Question Text) *
+                  3. आज का सवाल (Question Text) *
                 </label>
                 <input
                   type="text"
                   value={pollQuestionText}
                   onChange={(e) => setPollQuestionText(e.target.value)}
-                  placeholder="यहाँ सवाल दर्ज करें..."
+                  placeholder="उदा. 'स्कूल ठीक करो' आंदोलन को आप कितना महत्वपूर्ण मानते हैं?"
                   style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '15px' }}
                   required
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginBottom: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '20px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
                     विकल्प 1 (Option 1) *
@@ -1139,6 +1144,7 @@ export default function AdminPage() {
                     type="text"
                     value={pollOption1}
                     onChange={(e) => setPollOption1(e.target.value)}
+                    placeholder="बहुत महत्वपूर्ण"
                     style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px' }}
                     required
                   />
@@ -1152,6 +1158,7 @@ export default function AdminPage() {
                     type="text"
                     value={pollOption2}
                     onChange={(e) => setPollOption2(e.target.value)}
+                    placeholder="महत्वपूर्ण"
                     style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px' }}
                     required
                   />
@@ -1165,6 +1172,20 @@ export default function AdminPage() {
                     type="text"
                     value={pollOption3}
                     onChange={(e) => setPollOption3(e.target.value)}
+                    placeholder="कम महत्वपूर्ण"
+                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
+                    विकल्प 4 (Option 4)
+                  </label>
+                  <input
+                    type="text"
+                    value={pollOption4}
+                    onChange={(e) => setPollOption4(e.target.value)}
+                    placeholder="महत्वपूर्ण नहीं"
                     style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px' }}
                   />
                 </div>
@@ -1174,15 +1195,15 @@ export default function AdminPage() {
                 type="submit"
                 style={{ background: 'var(--primary)', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '6px', fontWeight: 700, fontSize: '14px', cursor: 'pointer' }}
               >
-                💾 सवाल और विकल्प अपडेट करें (Save Question)
+                💾 सवाल और विकल्प सहेजें (Save Form Question)
               </button>
             </form>
 
-            {/* SUBMITTED RESPONSES TABLE */}
+            {/* SUBMITTED RESPONSES VIEW */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                 <h3 style={{ fontSize: '17px', color: '#000' }}>
-                  📩 पाठकों से प्राप्त जवाब लिस्ट ({pollResponses.length})
+                  📩 पाठकों से प्राप्त संपूर्ण प्रतिक्रियाएं ({pollResponses.length})
                 </h3>
                 <button onClick={loadPollManager} style={{ background: '#e2e8f0', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}>
                   🔄 रीफ्रीश करें
@@ -1191,47 +1212,84 @@ export default function AdminPage() {
 
               {pollResponses.length === 0 ? (
                 <p style={{ color: '#64748b', padding: '20px', textAlign: 'center', background: '#f8fafc', borderRadius: '6px' }}>
-                  अभी तक कोई जवाब प्राप्त नहीं हुआ है।
+                  अभी तक कोई प्रतिक्रिया प्राप्त नहीं हुई है।
                 </p>
               ) : (
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                    <thead>
-                      <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1', textAlign: 'left' }}>
-                        <th style={{ padding: '10px' }}>#</th>
-                        <th style={{ padding: '10px' }}>यूजर का नाम / संपर्क</th>
-                        <th style={{ padding: '10px' }}>चुना गया उत्तर</th>
-                        <th style={{ padding: '10px' }}>विस्तृत राय / टिप्पणी</th>
-                        <th style={{ padding: '10px' }}>समय</th>
-                        <th style={{ padding: '10px' }}>कार्य</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pollResponses.map((r, idx) => (
-                        <tr key={r.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                          <td style={{ padding: '10px', fontWeight: 700 }}>{idx + 1}</td>
-                          <td style={{ padding: '10px', fontWeight: 600 }}>{r.user_name}</td>
-                          <td style={{ padding: '10px' }}>
-                            <span style={{ background: '#dcfce7', color: '#166534', padding: '3px 8px', borderRadius: '4px', fontWeight: 700, fontSize: '12px' }}>
-                              {r.selected_option}
-                            </span>
-                          </td>
-                          <td style={{ padding: '10px', color: '#475569' }}>{r.user_opinion || '—'}</td>
-                          <td style={{ padding: '10px', color: '#64748b', fontSize: '11px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {pollResponses.map((r, idx) => (
+                    <div
+                      key={r.id}
+                      style={{
+                        background: '#ffffff',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '8px',
+                        padding: '18px',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px', marginBottom: '12px' }}>
+                        <div>
+                          <span style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '15px' }}>
+                            #{idx + 1} {r.user_name}
+                          </span>
+                          <span style={{ fontSize: '13px', color: '#64748b', marginLeft: '10px' }}>
+                            📍 {r.city_district} • 📞 {r.mobile_number || 'N/A'}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <span style={{ fontSize: '11px', color: '#94a3b8' }}>
                             {new Date(r.submitted_at).toLocaleString('hi-IN')}
-                          </td>
-                          <td style={{ padding: '10px' }}>
-                            <button
-                              onClick={() => handleDeletePollResponse(r.id)}
-                              style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}
-                            >
-                              🗑️ डिलीट
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </span>
+                          <button
+                            onClick={() => handleDeletePollResponse(r.id)}
+                            style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}
+                          >
+                            🗑️ डिलीट
+                          </button>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', fontSize: '13px' }}>
+                        <div>
+                          <strong style={{ color: '#334155', display: 'block', marginBottom: '3px' }}>
+                            3. चुना गया उत्तर:
+                          </strong>
+                          <span style={{ background: '#dcfce7', color: '#166534', padding: '3px 8px', borderRadius: '4px', fontWeight: 700, display: 'inline-block' }}>
+                            {r.selected_option}
+                          </span>
+                        </div>
+
+                        <div>
+                          <strong style={{ color: '#334155', display: 'block', marginBottom: '3px' }}>
+                            6. प्रकाशन सहमति:
+                          </strong>
+                          <span style={{ color: '#1e293b', fontWeight: 600 }}>
+                            {r.publish_consent}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed #e2e8f0', fontSize: '13px' }}>
+                        <strong style={{ color: '#334155', display: 'block', marginBottom: '4px' }}>
+                          4. आज के सवाल पर पाठक की राय:
+                        </strong>
+                        <p style={{ background: '#f8fafc', padding: '10px', borderRadius: '6px', color: '#0f172a', lineHeight: '1.5' }}>
+                          {r.user_opinion}
+                        </p>
+                      </div>
+
+                      {r.solution_idea && r.solution_idea !== 'N/A' && (
+                        <div style={{ marginTop: '10px', fontSize: '13px' }}>
+                          <strong style={{ color: '#334155', display: 'block', marginBottom: '4px' }}>
+                            5. पाठक के अनुसार समाधान:
+                          </strong>
+                          <p style={{ background: '#fdf2f2', padding: '10px', borderRadius: '6px', color: '#0f172a', lineHeight: '1.5' }}>
+                            {r.solution_idea}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

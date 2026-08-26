@@ -18,16 +18,21 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    if (!body.poll_id || !body.selected_option) {
-      return NextResponse.json({ error: 'विकल्प चुनना अनिवार्य है।' }, { status: 400 });
+    if (!body.poll_id || !body.user_name || !body.city_district || !body.selected_option || !body.user_opinion || !body.publish_consent) {
+      return NextResponse.json({ error: 'कृपया सभी अनिवार्य (*) फ़ील्ड भरें।' }, { status: 400 });
     }
-    const resp = submitPollResponse(
-      body.poll_id,
-      body.selected_option,
-      body.user_name,
-      body.user_contact,
-      body.user_opinion
-    );
+
+    const resp = submitPollResponse({
+      poll_id: body.poll_id,
+      user_name: body.user_name,
+      city_district: body.city_district,
+      selected_option: body.selected_option,
+      user_opinion: body.user_opinion,
+      solution_idea: body.solution_idea,
+      publish_consent: body.publish_consent,
+      mobile_number: body.mobile_number
+    });
+
     return NextResponse.json(resp, { status: 201 });
   } catch (e) {
     return NextResponse.json({ error: 'Unable to submit response' }, { status: 500 });

@@ -10,16 +10,19 @@ export interface PollResponse {
   id: string;
   poll_id: string;
   user_name: string;
-  user_contact: string;
+  city_district: string;
   selected_option: string;
   user_opinion: string;
+  solution_idea: string;
+  publish_consent: string;
+  mobile_number: string;
   submitted_at: string;
 }
 
 let currentPoll: PollQuestion = {
   id: 'poll-1',
-  question: 'क्या आपको लगता है कि आगामी चुनावों में युवाओं के रोजगार का मुद्दा सबसे महत्वपूर्ण रहेगा?',
-  options: ['हाँ, बिल्कुल', 'नहीं, अन्य मुद्दे ज्यादा प्रभावी होंगे', 'कह नहीं सकते / तटस्थ'],
+  question: '"स्कूल ठीक करो" आंदोलन को आप कितना महत्वपूर्ण मानते हैं?',
+  options: ['बहुत महत्वपूर्ण', 'महत्वपूर्ण', 'कम महत्वपूर्ण', 'महत्वपूर्ण नहीं'],
   active: true,
   created_at: new Date().toISOString()
 };
@@ -28,20 +31,14 @@ let pollResponses: PollResponse[] = [
   {
     id: 'resp-1',
     poll_id: 'poll-1',
-    user_name: 'रमेश कुमार',
-    user_contact: 'ramesh@example.com',
-    selected_option: 'हाँ, बिल्कुल',
-    user_opinion: 'रोजगार ही मुख्य मुद्दा होना चाहिए।',
-    submitted_at: new Date(Date.now() - 3600000 * 5).toISOString()
-  },
-  {
-    id: 'resp-2',
-    poll_id: 'poll-1',
-    user_name: 'सुनील शर्मा',
-    user_contact: '9876543210',
-    selected_option: 'हाँ, बिल्कुल',
-    user_opinion: 'युवा वर्ग अब परिणाम चाहता है।',
-    submitted_at: new Date(Date.now() - 3600000 * 2).toISOString()
+    user_name: 'रमेश शर्मा',
+    city_district: 'जयपुर, राजस्थान',
+    selected_option: 'बहुत महत्वपूर्ण',
+    user_opinion: 'सरकारी स्कूलों में मूलभूत सुविधाओं और गुणवत्तापूर्ण शिक्षा का होना अति आवश्यक है।',
+    solution_idea: 'प्रत्येक स्कूल में नियमित निरीक्षण और शिक्षकों की समयबद्ध उपस्थिति सुनिश्चित की जाए।',
+    publish_consent: 'हाँ, मेरे नाम के साथ प्रकाशित की जा सकती है।',
+    mobile_number: '98290XXXXX',
+    submitted_at: new Date(Date.now() - 3600000 * 3).toISOString()
   }
 ];
 
@@ -94,20 +91,26 @@ export function togglePollActive(active?: boolean): boolean {
   return currentPoll.active;
 }
 
-export function submitPollResponse(
-  poll_id: string,
-  selected_option: string,
-  user_name?: string,
-  user_contact?: string,
-  user_opinion?: string
-): PollResponse {
+export function submitPollResponse(data: {
+  poll_id: string;
+  user_name: string;
+  city_district: string;
+  selected_option: string;
+  user_opinion: string;
+  solution_idea?: string;
+  publish_consent: string;
+  mobile_number?: string;
+}): PollResponse {
   const newResp: PollResponse = {
     id: `resp-${Date.now()}`,
-    poll_id,
-    user_name: user_name?.trim() || 'गुमनाम पाठक',
-    user_contact: user_contact?.trim() || 'N/A',
-    selected_option: selected_option.trim(),
-    user_opinion: user_opinion?.trim() || '',
+    poll_id: data.poll_id,
+    user_name: data.user_name.trim(),
+    city_district: data.city_district.trim(),
+    selected_option: data.selected_option.trim(),
+    user_opinion: data.user_opinion.trim(),
+    solution_idea: data.solution_idea?.trim() || 'N/A',
+    publish_consent: data.publish_consent.trim(),
+    mobile_number: data.mobile_number?.trim() || 'N/A',
     submitted_at: new Date().toISOString()
   };
 
