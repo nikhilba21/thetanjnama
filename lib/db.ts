@@ -150,6 +150,11 @@ export async function getPublishedPosts(limit = 20): Promise<Post[]> {
   return inMemoryPosts.filter((p) => p.status === 'published').slice(0, limit);
 }
 
+export async function getPostsByCategory(categoryName: string, limit = 50): Promise<Post[]> {
+  const all = await getPublishedPosts(limit);
+  return all.filter((p) => p.category.toLowerCase() === categoryName.toLowerCase());
+}
+
 export async function getPost(slug: string): Promise<Post | null> {
   try {
     const rows = (await request(`posts?slug=eq.${encodeURIComponent(slug)}&status=eq.published&limit=1`)) as Post[] | null;

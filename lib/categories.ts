@@ -23,7 +23,6 @@ let inMemoryCategories: CategoryItem[] = [...initialCategories];
 
 export const CATEGORY_LIST: CategoryItem[] = initialCategories;
 
-
 export function getCategories(includeInactive = false): CategoryItem[] {
   if (includeInactive) return inMemoryCategories;
   return inMemoryCategories.filter((c) => c.active);
@@ -70,6 +69,10 @@ export function getCategoryNameFromSlug(slug: string): string | null {
     (c) => c.slug.toLowerCase() === decoded || c.name.toLowerCase() === decoded
   );
   return match ? match.name : null;
+}
+
+export function getCategoryNameBySlug(slug: string): string {
+  return getCategoryNameFromSlug(slug) || slug;
 }
 
 export function getCategorySlugFromName(name: string): string {
