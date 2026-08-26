@@ -35,6 +35,9 @@ export const metadata: Metadata = {
   verification: {
     google: 'Do016rt6M0nMAw7LnXzML-_okC72nLhOSgp6kwZvYxU'
   },
+  other: {
+    'google-adsense-account': 'ca-pub-3935952599641519'
+  },
   robots: {
     index: true,
     follow: true,
@@ -113,6 +116,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="hi">
       <head>
+        <meta name="google-adsense-account" content="ca-pub-3935952599641519" />
         <meta name="google-site-verification" content="Do016rt6M0nMAw7LnXzML-_okC72nLhOSgp6kwZvYxU" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -127,13 +131,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
         />
 
-        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT && (
-          <script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT}`}
-            crossOrigin="anonymous"
-          ></script>
-        )}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3935952599641519"
+          crossOrigin="anonymous"
+        ></script>
       </head>
       <body>
         <div id="outer-wrapper">
