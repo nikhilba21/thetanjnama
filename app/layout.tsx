@@ -8,11 +8,11 @@ import { CATEGORY_LIST } from '@/lib/categories';
 export const metadata: Metadata = {
   metadataBase: new URL('https://thetanjnama-omega.vercel.app'),
   title: {
-    default: 'TANJNAMA | सोच पर तंज, सच के साथ',
+    default: 'TANJNAMA | सोच पर तंज, सच के साथ — स्वतंत्र हिंदी समाचार एवं विश्लेषण',
     template: '%s | TANJNAMA'
   },
   description:
-    'TANJNAMA (तंजनामा) — सोच पर तंज, सच के साथ। स्वतंत्र खबरों, तंज, निष्पक्ष विश्लेषण, डाटा स्टोरी और नागरिक पत्रकारिता का अग्रणी मंच।',
+    'TANJNAMA (तंजनामा) — सोच पर तंज, सच के साथ। स्वतंत्र खबरों, तीखे तंज, निष्पक्ष राजनीतिक विश्लेषण, डेटा स्टोरी और नागरिक पत्रकारिता का अग्रणी डिजिटल मंच।',
   keywords: [
     'TANJNAMA',
     'तंजनामा',
@@ -22,19 +22,91 @@ export const metadata: Metadata = {
     'खबरें',
     'राजस्थान समाचार',
     'राजनीति',
-    'विश्लेषण'
+    'विश्लेषण',
+    'डेटा स्टोरी',
+    'नागरिक पत्रकारिता'
   ],
-  robots: { index: true, follow: true },
+  authors: [{ name: 'TANJNAMA Editorial Team', url: 'https://thetanjnama-omega.vercel.app' }],
+  creator: 'TANJNAMA Media',
+  publisher: 'TANJNAMA Media Group',
+  alternates: {
+    canonical: 'https://thetanjnama-omega.vercel.app'
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1
+    }
+  },
   openGraph: {
     title: 'TANJNAMA — सोच पर तंज, सच के साथ',
-    description: 'स्वतंत्र डिजिटल समाचार, तंज और निष्पक्ष विश्लेषण मंच।',
+    description: 'स्वतंत्र डिजिटल समाचार, तीखा तंज और निष्पक्ष विश्लेषण मंच।',
     type: 'website',
     url: 'https://thetanjnama-omega.vercel.app',
-    images: [{ url: '/logo.png' }]
+    siteName: 'TANJNAMA',
+    locale: 'hi_IN',
+    images: [
+      {
+        url: 'https://thetanjnama-omega.vercel.app/logo.png',
+        width: 1200,
+        height: 630,
+        alt: 'TANJNAMA — सोच पर तंज, सच के साथ'
+      }
+    ]
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TANJNAMA — सोच पर तंज, सच के साथ',
+    description: 'स्वतंत्र डिजिटल समाचार, तीखा तंज और निष्पक्ष विश्लेषण मंच।',
+    images: ['https://thetanjnama-omega.vercel.app/logo.png']
   }
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // JSON-LD Structured Data Schema for Google Search
+  const jsonLdSchema = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'NewsMediaOrganization',
+        '@id': 'https://thetanjnama-omega.vercel.app/#organization',
+        name: 'TANJNAMA',
+        url: 'https://thetanjnama-omega.vercel.app',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://thetanjnama-omega.vercel.app/logo.png'
+        },
+        slogan: 'सोच पर तंज, सच के साथ',
+        sameAs: [
+          'https://facebook.com',
+          'https://twitter.com',
+          'https://instagram.com',
+          'https://youtube.com'
+        ]
+      },
+      {
+        '@type': 'WebSite',
+        '@id': 'https://thetanjnama-omega.vercel.app/#website',
+        url: 'https://thetanjnama-omega.vercel.app',
+        name: 'TANJNAMA',
+        description: 'सोच पर तंज, सच के साथ — स्वतंत्र समाचार एवं विश्लेषण',
+        publisher: {
+          '@id': 'https://thetanjnama-omega.vercel.app/#organization'
+        },
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: 'https://thetanjnama-omega.vercel.app/search?q={search_term_string}',
+          'query-input': 'required name=search_term_string'
+        }
+      }
+    ]
+  };
+
   return (
     <html lang="hi">
       <head>
@@ -44,6 +116,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400..900;1,400..900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap"
           rel="stylesheet"
         />
+
+        {/* Structured Data JSON-LD Script */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
+        />
+
         {process.env.NEXT_PUBLIC_ADSENSE_CLIENT && (
           <script
             async

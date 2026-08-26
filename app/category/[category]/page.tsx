@@ -1,17 +1,29 @@
-import { getPublishedPosts } from '@/lib/db';
-import { getCategoryNameFromSlug } from '@/lib/categories';
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getPostsByCategory } from '@/lib/db';
+import { getCategoryNameBySlug } from '@/lib/categories';
+import AajKaSawalWidget from '@/components/AajKaSawalWidget';
 
 export async function generateMetadata({
   params
 }: {
   params: Promise<{ category: string }>;
-}) {
-  const rawParam = (await params).category;
-  const categoryName = getCategoryNameFromSlug(rawParam) || decodeURIComponent(rawParam);
+}): Promise<Metadata> {
+  const { category: categorySlug } = await params;
+  const categoryName = getCategoryNameBySlug(categorySlug);
+  const pageUrl = `https://thetanjnama-omega.vercel.app/category/${categorySlug}`;
+
   return {
-    title: `${categoryName} | TANJNAMA`,
-    description: `TANJNAMA पर ${categoryName} श्रेणी के सभी नवीनतम समाचार, तंज और निष्पक्ष विश्लेषण पढ़ें।`
+    title: `${categoryName} समाचार एवं विश्लेषण | TANJNAMA`,
+    description: `TANJNAMA पर ${categoryName} श्रेणी की ताजा खबरें, निष्पक्ष विश्लेषण और तीखा तंज पढ़ें।`,
+    alternates: {
+      canonical: pageUrl
+    },
+    openGraph: {
+      title: `${categoryName} — TANJNAMA`,
+      description: `${categoryName} की ताजा खबरें और विश्लेषण।`,
+      url: pageUrl
+    }
   };
 }
 
@@ -20,55 +32,79 @@ export default async function CategoryPage({
 }: {
   params: Promise<{ category: string }>;
 }) {
-  const rawParam = (await params).category;
-  const categoryName = getCategoryNameFromSlug(rawParam) || decodeURIComponent(rawParam);
-
-  const allPosts = await getPublishedPosts(50);
-  const filtered = allPosts.filter(
-    (p) => p.category.trim().toLowerCase() === categoryName.trim().toLowerCase()
-  );
+  const { category: categorySlug } = await params;
+  const categoryName = getCategoryNameBySlug(categorySlug);
+  const posts = await getPostsByCategory(categoryName);
 
   return (
     <main className="page-container">
       <div className="container">
-        <div className="section-title-box">
-          <h2>📂 श्रेणी: {categoryName}</h2>
-          <span>{filtered.length} लेख प्रकाशित</span>
+        {/* Breadcrumb Navigation */}
+        <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>
+          <Link href="/" style={{ color: 'var(--primary)', fontWeight: 600 }}>होम</Link> / <span>{categoryName}</span>
         </div>
 
-        {filtered.length === 0 ? (
-          <div style={{ background: '#ffffff', padding: '40px', borderRadius: '6px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
-            <p style={{ fontSize: '15px', color: '#656565' }}>
-              इस श्रेणी (<strong>{categoryName}</strong>) में अभी कोई लेख उपलब्ध नहीं है। जल्द ही नये लेख प्रकाशित किए जाएंगे!
-            </p>
+        <div className="layout-grid">
+          {/* Main Category Feed */}
+          <div className="feed-main">
+            <div className="section-header" style={{ marginBottom: '24px' }}>
+              <h1 className="section-title" style={{ fontSize: '26px' }}>
+                {categoryName}
+              </h1>
+              <span style={{ fontSize: '13px', color: '#64748b' }}>
+                ({posts.length} खबरें)
+              </span>
+            </div>
+
+            {posts.length === 0 ? (
+              <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
+                <p style={{ fontSize: '16px', color: '#64748b' }}>
+                  इस श्रेणी में अभी कोई खबर प्रकाशित नहीं हुई है।
+                </p>
+                <Link href="/" className="btn-primary" style={{ display: 'inline-block', marginTop: '16px' }}>
+                  होमपेज पर वापस जाएं
+                </Link>
+              </div>
+            ) : (
+              <div className="article-feed-list" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {posts.map((p) => (
+                  <article key={p.id} className="card flex-row-card" style={{ display: 'flex', gap: '20px', padding: '16px' }}>
+                    {p.featured_image && (
+                      <Link href={`/posts/${p.slug}`} style={{ flexShrink: 0, width: '220px' }}>
+                        <img
+                          src={p.featured_image}
+                          alt={p.title}
+                          style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '6px' }}
+                        />
+                      </Link>
+                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <span className="card-tag" style={{ width: 'fit-content', marginBottom: '6px' }}>
+                        {p.category}
+                      </span>
+                      <h2 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '8px', lineHeight: '1.4' }}>
+                        <Link href={`/posts/${p.slug}`} style={{ color: '#111' }}>
+                          {p.title}
+                        </Link>
+                      </h2>
+                      <p style={{ fontSize: '13px', color: '#475569', lineHeight: '1.6', marginBottom: '10px' }}>
+                        {p.excerpt}
+                      </p>
+                      <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                        {p.author} • {p.published_at ? new Date(p.published_at).toLocaleDateString('hi-IN') : 'हाल ही में'}
+                      </span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="posts-grid">
-            {filtered.map((p) => (
-              <Link href={`/posts/${p.slug}`} className="post-card" key={p.id}>
-                <div className="post-card-image">
-                  <img
-                    src={
-                      p.featured_image ||
-                      'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&q=80'
-                    }
-                    alt={p.title}
-                  />
-                  <span className="cat-badge">{p.category}</span>
-                </div>
-                <div className="post-card-content">
-                  <h3>{p.title}</h3>
-                  <p>{p.excerpt}</p>
-                  <div className="post-meta-line">
-                    <span>📅 {new Date(p.published_at || Date.now()).toLocaleDateString('hi-IN')}</span>
-                    <span>•</span>
-                    <span>{p.author}</span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
+
+          {/* Sidebar */}
+          <aside className="feed-sidebar">
+            <AajKaSawalWidget />
+          </aside>
+        </div>
       </div>
     </main>
   );
