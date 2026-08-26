@@ -66,9 +66,10 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Main Header with Official Logo Image */}
+      {/* Main Header with Logo AND Navigation Items in ONE SINGLE LINE */}
       <header className="main-header">
         <div className="container header-inner">
+          {/* Logo Brand */}
           <div className="brand-group">
             <button
               className="mobile-toggle"
@@ -82,17 +83,9 @@ export default function Header() {
             </Link>
           </div>
 
-          <div className="header-actions">
-            <button className="search-btn" onClick={() => setSearchOpen(true)}>
-              🔍 खोजें
-            </button>
-          </div>
-        </div>
-
-        {/* Navigation Bar with Clean English Category Slugs */}
-        <nav className="desktop-nav">
-          <div className="container">
-            <ul className="nav-list">
+          {/* Inline Navigation Menu (Same Line) */}
+          <nav className="desktop-inline-nav">
+            <ul className="inline-nav-list">
               <li>
                 <Link href="/" className="nav-link home-link">
                   🏠 होम
@@ -106,8 +99,15 @@ export default function Header() {
                 </li>
               ))}
             </ul>
+          </nav>
+
+          {/* Search Button */}
+          <div className="header-actions">
+            <button className="search-btn" onClick={() => setSearchOpen(true)}>
+              🔍 खोजें
+            </button>
           </div>
-        </nav>
+        </div>
       </header>
 
       {/* Mobile Menu Overlay */}
