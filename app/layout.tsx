@@ -32,6 +32,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://www.tanjnama.com'
   },
+  verification: {
+    google: 'Do016rt6M0nMAw7LnXzML-_okC72nLhOSgp6kwZvYxU'
+  },
   robots: {
     index: true,
     follow: true,
@@ -110,6 +113,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="hi">
       <head>
+        <meta name="google-site-verification" content="Do016rt6M0nMAw7LnXzML-_okC72nLhOSgp6kwZvYxU" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
