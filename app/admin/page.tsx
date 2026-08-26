@@ -51,6 +51,13 @@ type PollResponse = {
   submitted_at: string;
 };
 
+type PageItem = {
+  slug: 'about' | 'contact' | 'privacy-policy' | 'disclaimer';
+  title: string;
+  content: string;
+  updated_at?: string;
+};
+
 const blankForm: Post = {
   title: '',
   slug: '',
@@ -71,7 +78,7 @@ export default function AdminPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  const [activeTab, setActiveTab] = useState<'editor' | 'categories' | 'ticker' | 'poll' | 'manage'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'categories' | 'poll' | 'pages' | 'ticker' | 'manage'>('editor');
   const [posts, setPosts] = useState<Post[]>([]);
   const [tickers, setTickers] = useState<TickerItem[]>([]);
   const [isTickerActive, setIsTickerActive] = useState<boolean>(true);
@@ -91,6 +98,12 @@ export default function AdminPage() {
   const [pollOption4, setPollOption4] = useState('');
   const [isPollActive, setIsPollActive] = useState(true);
 
+  // PAGE CONTENT MANAGER STATE
+  const [pages, setPages] = useState<Record<string, PageItem>>({});
+  const [selectedPageSlug, setSelectedPageSlug] = useState<'about' | 'contact' | 'privacy-policy' | 'disclaimer'>('about');
+  const [pageTitle, setPageTitle] = useState('');
+  const [pageContent, setPageContent] = useState('');
+
   const [form, setForm] = useState<Post>(blankForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState('');
@@ -104,6 +117,7 @@ export default function AdminPage() {
       loadTickers();
       loadCategories();
       loadPollManager();
+      loadPagesManager();
     }
   }, []);
 
@@ -123,8 +137,62 @@ export default function AdminPage() {
       loadTickers();
       loadCategories();
       loadPollManager();
+      loadPagesManager();
     } else {
       setAuthError('गलत Log ID या पासवर्ड! कृपया सही लॉगिन क्रेडेंशियल दर्ज करें।');
+    }
+  };
+
+  // LOAD PAGES CONTENT
+  async function loadPagesManager() {
+    try {
+      const res = await fetch('/api/pages');
+      if (res.ok) {
+        const list: PageItem[] = await res.json();
+        const map: Record<string, PageItem> = {};
+        list.forEach((p) => {
+          map[p.slug] = p;
+        });
+        setPages(map);
+        if (map['about']) {
+          setPageTitle(map['about'].title);
+          setPageContent(map['about'].content);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load pages content:', e);
+    }
+  }
+
+  const handleSelectPageToEdit = (slug: 'about' | 'contact' | 'privacy-policy' | 'disclaimer') => {
+    setSelectedPageSlug(slug);
+    if (pages[slug]) {
+      setPageTitle(pages[slug].title);
+      setPageContent(pages[slug].content);
+    }
+  };
+
+  const handleSavePageContent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pageTitle.trim() || !pageContent.trim()) return;
+
+    try {
+      const res = await fetch('/api/pages', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: selectedPageSlug,
+          title: pageTitle.trim(),
+          content: pageContent.trim()
+        })
+      });
+
+      if (res.ok) {
+        setStatusMsg(`📄 "${pageTitle}" की सामग्री सहेज ली गई है!`);
+        loadPagesManager();
+      }
+    } catch (e) {
+      setStatusMsg('❌ पेज अपडेट करने में त्रुटि।');
     }
   };
 
@@ -716,6 +784,22 @@ export default function AdminPage() {
           </button>
 
           <button
+            onClick={() => setActiveTab('pages')}
+            style={{
+              padding: '10px 20px',
+              fontSize: '14px',
+              fontWeight: 700,
+              borderRadius: '6px',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeTab === 'pages' ? 'var(--primary)' : '#e2e8f0',
+              color: activeTab === 'pages' ? '#ffffff' : '#334155'
+            }}
+          >
+            📄 पेज सामग्री (Policy Pages)
+          </button>
+
+          <button
             onClick={() => setActiveTab('ticker')}
             style={{
               padding: '10px 20px',
@@ -1080,7 +1164,7 @@ export default function AdminPage() {
                       onClick={() => handleDeleteCategory(cat.id)}
                       style={{ background: '#dc2626', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
                     >
-                      🗑️ हटाएं
+                      🗑️ बताएं
                     </button>
                   </div>
                 </div>
@@ -1296,7 +1380,98 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* TAB 4: BREAKING TICKER MANAGEMENT & MASTER TOGGLE */}
+        {/* TAB 4: PAGE CONTENT MANAGER (ABOUT, CONTACT, PRIVACY, DISCLAIMER) */}
+        {activeTab === 'pages' && (
+          <div style={{ background: '#ffffff', padding: '30px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+            <h2 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '8px' }}>
+              📄 पेज सामग्री प्रबंधन (Page Content Manager)
+            </h2>
+            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '24px' }}>
+              यहाँ से 'हमारे बारे में', 'संपर्क करें', 'गोपनीयता नीति' और 'अस्वीकरण' पेजों का टेक्स्ट और सामग्री संपादित (Edit) करें।
+            </p>
+
+            {/* PAGE SELECTOR BUTTONS */}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
+              {[
+                { slug: 'about', label: '1. हमारे बारे में (About Us)' },
+                { slug: 'contact', label: '2. संपर्क करें (Contact Us)' },
+                { slug: 'privacy-policy', label: '3. गोपनीयता नीति (Privacy Policy)' },
+                { slug: 'disclaimer', label: '4. अस्वीकरण (Disclaimer)' }
+              ].map((p) => (
+                <button
+                  key={p.slug}
+                  onClick={() => handleSelectPageToEdit(p.slug as any)}
+                  style={{
+                    padding: '10px 16px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    background: selectedPageSlug === p.slug ? 'var(--primary)' : '#f1f5f9',
+                    color: selectedPageSlug === p.slug ? '#ffffff' : '#334155'
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+
+            {/* EDIT PAGE CONTENT FORM */}
+            <form onSubmit={handleSavePageContent}>
+              <div style={{ marginBottom: '18px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  पेज का मुख्य शीर्षक (Page Title) *
+                </label>
+                <input
+                  type="text"
+                  value={pageTitle}
+                  onChange={(e) => setPageTitle(e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '15px' }}
+                  required
+                />
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  पेज की सामग्री (HTML / Text Content) *
+                </label>
+
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', background: '#f1f5f9', padding: '8px', borderRadius: '6px 6px 0 0', border: '1px solid #cbd5e1', borderBottom: 'none' }}>
+                  <button type="button" onClick={() => setPageContent((prev) => prev + '\n<h2>शीर्षक लिखें</h2>\n')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
+                    H2 हेडिंग
+                  </button>
+                  <button type="button" onClick={() => setPageContent((prev) => prev + '\n<h3>उप-शीर्षक लिखें</h3>\n')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
+                    H3 सब-हेडिंग
+                  </button>
+                  <button type="button" onClick={() => setPageContent((prev) => prev + '\n<p>पैराग्राफ टेक्स्ट...</p>\n')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
+                    Paragraph
+                  </button>
+                  <button type="button" onClick={() => setPageContent((prev) => prev + '<strong>बोल्ड टेक्स्ट</strong>')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
+                    Bold
+                  </button>
+                </div>
+
+                <textarea
+                  rows={14}
+                  value={pageContent}
+                  onChange={(e) => setPageContent(e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '0 0 6px 6px', border: '1px solid #cbd5e1', fontSize: '14px', fontFamily: 'monospace', lineHeight: '1.6' }}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                style={{ width: '100%', background: 'var(--primary)', color: '#ffffff', border: 'none', padding: '14px', borderRadius: '6px', fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                💾 पेज सामग्री सहेजें (Save Page Content)
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* TAB 5: BREAKING TICKER MANAGEMENT & MASTER TOGGLE */}
         {activeTab === 'ticker' && (
           <div style={{ background: '#ffffff', padding: '30px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
             <h2 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '10px' }}>
@@ -1392,7 +1567,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* TAB 5: MANAGE ARTICLES */}
+        {/* TAB 6: MANAGE ARTICLES */}
         {activeTab === 'manage' && (
           <div style={{ background: '#ffffff', padding: '30px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
