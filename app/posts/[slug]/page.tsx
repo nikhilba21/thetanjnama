@@ -11,8 +11,8 @@ export async function generateMetadata({
   const p = await getPost(slug);
   if (!p) return { title: 'लेख | TANJNAMA' };
 
-  const pageUrl = `https://thetanjnama-omega.vercel.app/posts/${p.slug}`;
-  const imageUrl = p.featured_image || 'https://thetanjnama-omega.vercel.app/logo.png';
+  const pageUrl = `https://www.tanjnama.com/posts/${p.slug}`;
+  const imageUrl = p.featured_image || 'https://www.tanjnama.com/logo.png';
 
   return {
     title: p.seo_title || `${p.title} | TANJNAMA`,
@@ -56,8 +56,8 @@ export default async function ArticlePage({
             '@type': 'NewsArticle',
             headline: post.title,
             description: post.excerpt,
-            url: `https://thetanjnama-omega.vercel.app/posts/${post.slug}`,
-            image: post.featured_image ? [post.featured_image] : ['https://thetanjnama-omega.vercel.app/logo.png'],
+            url: `https://www.tanjnama.com/posts/${post.slug}`,
+            image: post.featured_image ? [post.featured_image] : ['https://www.tanjnama.com/logo.png'],
             datePublished: post.published_at || post.created_at,
             dateModified: post.updated_at || post.published_at || post.created_at,
             author: {
@@ -69,7 +69,7 @@ export default async function ArticlePage({
               name: 'TANJNAMA',
               logo: {
                 '@type': 'ImageObject',
-                url: 'https://thetanjnama-omega.vercel.app/logo.png'
+                url: 'https://www.tanjnama.com/logo.png'
               }
             },
             articleSection: post.category
@@ -81,19 +81,19 @@ export default async function ArticlePage({
                 '@type': 'ListItem',
                 position: 1,
                 name: 'होम',
-                item: 'https://thetanjnama-omega.vercel.app'
+                item: 'https://www.tanjnama.com'
               },
               {
                 '@type': 'ListItem',
                 position: 2,
                 name: post.category,
-                item: `https://thetanjnama-omega.vercel.app/category/${encodeURIComponent(post.category)}`
+                item: `https://www.tanjnama.com/category/${encodeURIComponent(post.category)}`
               },
               {
                 '@type': 'ListItem',
                 position: 3,
                 name: post.title,
-                item: `https://thetanjnama-omega.vercel.app/posts/${post.slug}`
+                item: `https://www.tanjnama.com/posts/${post.slug}`
               }
             ]
           }

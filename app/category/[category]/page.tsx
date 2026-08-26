@@ -11,7 +11,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { category: categorySlug } = await params;
   const categoryName = getCategoryNameBySlug(categorySlug);
-  const pageUrl = `https://thetanjnama-omega.vercel.app/category/${categorySlug}`;
+  const pageUrl = `https://www.tanjnama.com/category/${categorySlug}`;
 
   return {
     title: `${categoryName} समाचार एवं विश्लेषण | TANJNAMA`,

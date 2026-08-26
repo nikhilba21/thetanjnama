@@ -6,7 +6,7 @@ import BreakingTicker from '@/components/BreakingTicker';
 import { CATEGORY_LIST } from '@/lib/categories';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://thetanjnama-omega.vercel.app'),
+  metadataBase: new URL('https://www.tanjnama.com'),
   title: {
     default: 'TANJNAMA | सोच पर तंज, सच के साथ — स्वतंत्र हिंदी समाचार एवं विश्लेषण',
     template: '%s | TANJNAMA'
@@ -26,11 +26,11 @@ export const metadata: Metadata = {
     'डेटा स्टोरी',
     'नागरिक पत्रकारिता'
   ],
-  authors: [{ name: 'TANJNAMA Editorial Team', url: 'https://thetanjnama-omega.vercel.app' }],
+  authors: [{ name: 'TANJNAMA Editorial Team', url: 'https://www.tanjnama.com' }],
   creator: 'TANJNAMA Media',
   publisher: 'TANJNAMA Media Group',
   alternates: {
-    canonical: 'https://thetanjnama-omega.vercel.app'
+    canonical: 'https://www.tanjnama.com'
   },
   robots: {
     index: true,
@@ -47,12 +47,12 @@ export const metadata: Metadata = {
     title: 'TANJNAMA — सोच पर तंज, सच के साथ',
     description: 'स्वतंत्र डिजिटल समाचार, तीखा तंज और निष्पक्ष विश्लेषण मंच।',
     type: 'website',
-    url: 'https://thetanjnama-omega.vercel.app',
+    url: 'https://www.tanjnama.com',
     siteName: 'TANJNAMA',
     locale: 'hi_IN',
     images: [
       {
-        url: 'https://thetanjnama-omega.vercel.app/logo.png',
+        url: 'https://www.tanjnama.com/logo.png',
         width: 1200,
         height: 630,
         alt: 'TANJNAMA — सोच पर तंज, सच के साथ'
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'TANJNAMA — सोच पर तंज, सच के साथ',
     description: 'स्वतंत्र डिजिटल समाचार, तीखा तंज और निष्पक्ष विश्लेषण मंच।',
-    images: ['https://thetanjnama-omega.vercel.app/logo.png']
+    images: ['https://www.tanjnama.com/logo.png']
   }
 };
 
@@ -74,12 +74,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     '@graph': [
       {
         '@type': 'NewsMediaOrganization',
-        '@id': 'https://thetanjnama-omega.vercel.app/#organization',
+        '@id': 'https://www.tanjnama.com/#organization',
         name: 'TANJNAMA',
-        url: 'https://thetanjnama-omega.vercel.app',
+        url: 'https://www.tanjnama.com',
         logo: {
           '@type': 'ImageObject',
-          url: 'https://thetanjnama-omega.vercel.app/logo.png'
+          url: 'https://www.tanjnama.com/logo.png'
         },
         slogan: 'सोच पर तंज, सच के साथ',
         sameAs: [
@@ -91,16 +91,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       },
       {
         '@type': 'WebSite',
-        '@id': 'https://thetanjnama-omega.vercel.app/#website',
-        url: 'https://thetanjnama-omega.vercel.app',
+        '@id': 'https://www.tanjnama.com/#website',
+        url: 'https://www.tanjnama.com',
         name: 'TANJNAMA',
         description: 'सोच पर तंज, सच के साथ — स्वतंत्र समाचार एवं विश्लेषण',
         publisher: {
-          '@id': 'https://thetanjnama-omega.vercel.app/#organization'
+          '@id': 'https://www.tanjnama.com/#organization'
         },
         potentialAction: {
           '@type': 'SearchAction',
-          target: 'https://thetanjnama-omega.vercel.app/search?q={search_term_string}',
+          target: 'https://www.tanjnama.com/search?q={search_term_string}',
           'query-input': 'required name=search_term_string'
         }
       }

@@ -3,7 +3,7 @@ import { getPublishedPosts } from '@/lib/db';
 import { CATEGORY_LIST } from '@/lib/categories';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://thetanjnama-omega.vercel.app';
+  const baseUrl = 'https://www.tanjnama.com';
   const posts = await getPublishedPosts(100);
 
   const staticPages = [
