@@ -202,25 +202,6 @@ a {
   background: #ffffff;
 }
 
-  white-space: nowrap;
-}
-
-.nav-link {
-  font-size: 14px;
-  font-weight: 700;
-  color: #ffffff;
-  transition: color 0.17s ease;
-}
-
-.nav-link:hover {
-  color: var(--primary);
-}
-
-.home-link {
-  color: var(--primary);
-  font-weight: 800;
-}
-
 /* ===== BREAKING TICKER MARQUEE & BLINKING RED DOT ===== */
 .breaking-ticker-wrapper {
   background: #ffffff;
