@@ -1,4 +1,4 @@
-import { NextResponse } from 'next';
+import { NextResponse } from 'next/server';
 import { getPublishedPosts } from '@/lib/db';
 
 export async function GET() {

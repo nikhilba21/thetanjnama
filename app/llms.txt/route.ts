@@ -1,4 +1,4 @@
-import { NextResponse } from 'next';
+import { NextResponse } from 'next/server';
 import { getPublishedPosts } from '@/lib/db';
 import { CATEGORY_LIST } from '@/lib/categories';
 
