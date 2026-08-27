@@ -80,9 +80,10 @@ export default function AdminPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  const [activeTab, setActiveTab] = useState<'editor' | 'categories' | 'poll' | 'pages' | 'ticker' | 'manage'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'categories' | 'poll' | 'pages' | 'citizen' | 'ticker' | 'manage'>('editor');
   const [posts, setPosts] = useState<Post[]>([]);
   const [tickers, setTickers] = useState<TickerItem[]>([]);
+  const [citizenSubmissions, setCitizenSubmissions] = useState<any[]>([]);
   const [isTickerActive, setIsTickerActive] = useState<boolean>(true);
   const [newTickerText, setNewTickerText] = useState('');
 
@@ -120,6 +121,7 @@ export default function AdminPage() {
       loadCategories();
       loadPollManager();
       loadPagesManager();
+      loadCitizenSubmissions();
     }
   }, []);
 
@@ -165,6 +167,31 @@ export default function AdminPage() {
       console.error('Failed to load pages content:', e);
     }
   }
+
+  // LOAD CITIZEN SUBMISSIONS
+  async function loadCitizenSubmissions() {
+    try {
+      const res = await fetch('/api/citizen-journalism');
+      if (res.ok) {
+        const list = await res.json();
+        setCitizenSubmissions(list);
+      }
+    } catch (e) {
+      console.error('Failed to load citizen submissions:', e);
+    }
+  }
+
+  const handleDeleteCitizenSubmission = async (id: string) => {
+    try {
+      const res = await fetch(`/api/citizen-journalism?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (res.ok) {
+        setStatusMsg('✅ नागरिक पत्रकारिता आवेदन हटा दिया गया!');
+        loadCitizenSubmissions();
+      }
+    } catch (e) {
+      setStatusMsg('त्रुटि: आवेदन नहीं हटा।');
+    }
+  };
 
   const handleSelectPageToEdit = (slug: 'about' | 'contact' | 'privacy-policy' | 'disclaimer') => {
     setSelectedPageSlug(slug);
@@ -799,6 +826,22 @@ export default function AdminPage() {
             }}
           >
             📄 पेज सामग्री (Policy Pages)
+          </button>
+
+          <button
+            onClick={() => setActiveTab('citizen')}
+            style={{
+              padding: '10px 20px',
+              fontSize: '14px',
+              fontWeight: 700,
+              borderRadius: '6px',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeTab === 'citizen' ? 'var(--primary)' : '#e2e8f0',
+              color: activeTab === 'citizen' ? '#ffffff' : '#334155'
+            }}
+          >
+            📰 नागरिक पत्रकारिता आवेदन ({citizenSubmissions.length})
           </button>
 
           <button
@@ -1492,6 +1535,96 @@ export default function AdminPage() {
                 💾 पेज सामग्री सहेजें (Save Page Content)
               </button>
             </form>
+          </div>
+        )}
+
+        {/* TAB FOR CITIZEN SUBMISSIONS */}
+        {activeTab === 'citizen' && (
+          <div style={{ background: '#ffffff', padding: '30px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div>
+                <h2 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '4px' }}>
+                  📰 नागरिक पत्रकारिता आवेदन एवं रिपोर्ट प्रतिक्रियाएं
+                </h2>
+                <p style={{ fontSize: '13px', color: '#64748b' }}>
+                  पाठकों द्वारा 'नागरिक पत्रकारिता' फॉर्म द्वारा भेजी गई सभी खबरें और जनसमस्याएं।
+                </p>
+              </div>
+              <button
+                onClick={loadCitizenSubmissions}
+                style={{ background: '#e2e8f0', border: 'none', padding: '6px 14px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}
+              >
+                🔄 रीफ्रेश करें ({citizenSubmissions.length})
+              </button>
+            </div>
+
+            {citizenSubmissions.length === 0 ? (
+              <div style={{ padding: '40px', textAlign: 'center', background: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
+                <p style={{ fontSize: '15px', color: '#64748b' }}>अभी तक कोई नागरिक पत्रकारिता आवेदन प्राप्त नहीं हुआ है।</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {citizenSubmissions.map((s) => (
+                  <div
+                    key={s.id}
+                    style={{
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      padding: '20px',
+                      background: '#ffffff',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px' }}>
+                      <div>
+                        <span style={{ background: 'var(--primary)', color: '#fff', fontSize: '11px', fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}>
+                          {s.news_type || 'खबर'}
+                        </span>
+                        <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', marginTop: '6px' }}>
+                          {s.title}
+                        </h3>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteCitizenSubmission(s.id)}
+                        style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}
+                      >
+                        🗑️ डिलीट
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', fontSize: '13px', background: '#f8fafc', padding: '12px', borderRadius: '6px', marginBottom: '12px' }}>
+                      <div>👤 <strong>नाम:</strong> {s.full_name}</div>
+                      <div>📞 <strong>मोबाइल:</strong> {s.mobile_number}</div>
+                      <div>📧 <strong>ईमेल:</strong> {s.email || 'उपलब्ध नहीं'}</div>
+                      <div>📍 <strong>शहर/जिला:</strong> {s.city_district}</div>
+                      <div>🗺️ <strong>घटना स्थान:</strong> {s.location}</div>
+                      <div>📅 <strong>दिनांक:</strong> {new Date(s.created_at).toLocaleString('hi-IN')}</div>
+                    </div>
+
+                    <div style={{ marginBottom: '12px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '4px' }}>
+                        📝 खबर का विवरण:
+                      </span>
+                      <p style={{ fontSize: '14px', color: '#1e293b', background: '#ffffff', padding: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                        {s.description}
+                      </p>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#64748b' }}>
+                      <span>🖼️ फोटो/वीडियो मौजूद: <strong>{s.has_media}</strong></span>
+                      <span>•</span>
+                      <span>✅ स्वयं द्वारा बनाया गया: <strong>{s.is_original_permission}</strong></span>
+                      {s.source_info && (
+                        <>
+                          <span>•</span>
+                          <span>🔍 स्रोत: <strong>{s.source_info}</strong></span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

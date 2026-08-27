@@ -93,7 +93,10 @@ export default function Header() {
               </li>
               {categories.map((c) => (
                 <li key={c.slug}>
-                  <Link href={`/category/${c.slug}`} className="nav-link">
+                  <Link
+                    href={c.slug === 'nagrik-patrakarita' ? '/nagrik-patrakarita' : `/category/${c.slug}`}
+                    className="nav-link"
+                  >
                     {c.name}
                   </Link>
                 </li>
@@ -122,7 +125,10 @@ export default function Header() {
               <li><Link href="/" onClick={() => setMobileNavOpen(false)}>🏠 होम</Link></li>
               {categories.map((c) => (
                 <li key={c.slug}>
-                  <Link href={`/category/${c.slug}`} onClick={() => setMobileNavOpen(false)}>
+                  <Link
+                    href={c.slug === 'nagrik-patrakarita' ? '/nagrik-patrakarita' : `/category/${c.slug}`}
+                    onClick={() => setMobileNavOpen(false)}
+                  >
                     {c.name}
                   </Link>
                 </li>
