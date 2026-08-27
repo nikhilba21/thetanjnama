@@ -68,7 +68,7 @@ const blankForm: Post = {
   author: 'तंजनामा डेस्क',
   featured_image: '',
   video_url: '',
-  status: 'draft',
+  status: 'published',
   seo_title: '',
   seo_description: ''
 };
@@ -1655,6 +1655,25 @@ export default function AdminPage() {
                     </div>
 
                     <div style={{ display: 'flex', gap: '8px' }}>
+                      {p.status === 'draft' && (
+                        <button
+                          onClick={() => {
+                            const updated = { ...p, status: 'published' as const, published_at: new Date().toISOString() };
+                            saveLocalPostBackup(updated);
+                            fetch(`/api/posts/${p.id}`, {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify(updated)
+                            }).then(() => {
+                              setStatusMsg(`🚀 "${p.title}" को लाइव प्रकाशित कर दिया गया!`);
+                              loadPosts();
+                            });
+                          }}
+                          style={{ background: '#16a34a', color: '#ffffff', border: 'none', padding: '8px 14px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 700 }}
+                        >
+                          🚀 लाइव पब्लिश करें
+                        </button>
+                      )}
                       <button
                         onClick={() => handleEditPost(p)}
                         style={{ background: 'var(--primary)', color: '#ffffff', border: 'none', padding: '8px 14px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}

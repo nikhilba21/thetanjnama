@@ -32,43 +32,47 @@ export default function CategoryPageFeed({
   const [posts, setPosts] = useState<Post[]>(initialPosts);
 
   useEffect(() => {
-    // Sync with local storage backup to ensure instant display of published video articles
     try {
       const localStr = localStorage.getItem('tanjnama_local_articles');
+      let combined = [...initialPosts];
+
       if (localStr) {
         const localList: Post[] = JSON.parse(localStr);
-        const combined = [...initialPosts];
-
         localList.forEach((lp) => {
-          if (lp.status === 'published' && !combined.some((cp) => cp.id === lp.id || cp.slug === lp.slug)) {
+          if (!combined.some((cp) => cp.id === lp.id || cp.slug === lp.slug)) {
             combined.unshift(lp);
           }
         });
-
-        const target = decodeURIComponent(categorySlug).toLowerCase().trim();
-        const targetName = categoryName.toLowerCase().trim();
-        const isVideoCategory =
-          target === 'videos' ||
-          target === 'video' ||
-          targetName === 'videos' ||
-          targetName === 'वीडियो';
-
-        const filtered = combined.filter((p) => {
-          const cat = (p.category || '').toLowerCase().trim();
-          if (isVideoCategory) {
-            return (
-              Boolean(p.video_url) ||
-              cat === 'videos' ||
-              cat === 'video' ||
-              cat === 'वीडियो' ||
-              cat.includes('video')
-            );
-          }
-          return cat === target || cat === targetName;
-        });
-
-        setPosts(filtered);
       }
+
+      const target = decodeURIComponent(categorySlug).toLowerCase().trim();
+      const targetName = categoryName.toLowerCase().trim();
+      const isVideoCategory =
+        target === 'videos' ||
+        target === 'video' ||
+        targetName === 'videos' ||
+        targetName === 'वीडियो';
+
+      const filtered = combined.filter((p) => {
+        // Exclude explicit drafts if status is draft
+        if (p.status === 'draft') return false;
+
+        const cat = (p.category || '').toLowerCase().trim();
+
+        if (isVideoCategory) {
+          return (
+            Boolean(p.video_url && p.video_url.trim().length > 0) ||
+            cat === 'videos' ||
+            cat === 'video' ||
+            cat === 'वीडियो' ||
+            cat.includes('video')
+          );
+        }
+
+        return cat === target || cat === targetName;
+      });
+
+      setPosts(filtered);
     } catch (e) {
       console.warn('LocalStorage category sync error');
     }
@@ -96,10 +100,13 @@ export default function CategoryPageFeed({
 
           {posts.length === 0 ? (
             <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
-              <p style={{ fontSize: '16px', color: '#64748b' }}>
+              <p style={{ fontSize: '16px', color: '#64748b', marginBottom: '8px' }}>
                 इस श्रेणी में अभी कोई खबर प्रकाशित नहीं हुई है।
               </p>
-              <Link href="/" className="btn-primary" style={{ display: 'inline-block', marginTop: '16px' }}>
+              <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '16px' }}>
+                (यदि आपने एडमिन से खबर जोड़ी है, तो सुनिश्चित करें कि स्टेटस <strong>'Published (लाइव वेबसाइट)'</strong> सेट हो)
+              </p>
+              <Link href="/" className="btn-primary" style={{ display: 'inline-block' }}>
                 होमपेज पर वापस जाएं
               </Link>
             </div>
