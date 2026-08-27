@@ -193,6 +193,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 <h3 style={{ color: '#fff', fontSize: '16px', marginBottom: '14px' }}>महत्वपूर्ण लिंक्स</h3>
                 <ul className="footer-links">
                   <li>
+                    <Link href="/nagrik-patrakarita" style={{ color: 'var(--primary)', fontWeight: 700 }}>
+                      📰 नागरिक पत्रकारिता (योगदान दें)
+                    </Link>
+                  </li>
+                  <li>
                     <Link href="/about">हमारे बारे में (About Us)</Link>
                   </li>
                   <li>

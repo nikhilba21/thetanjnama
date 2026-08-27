@@ -15,7 +15,7 @@ const initialCategories: CategoryItem[] = [
   { id: 'cat-7', name: 'Data Story', slug: 'data-story', active: true },
   { id: 'cat-8', name: 'Editorial', slug: 'editorial', active: true },
   { id: 'cat-9', name: 'Fact Check', slug: 'fact-check', active: true },
-  { id: 'cat-10', name: 'नागरिक पत्रकारिता', slug: 'citizen-journalism', active: true },
+  { id: 'cat-10', name: 'नागरिक पत्रकारिता', slug: 'nagrik-patrakarita', active: true },
   { id: 'cat-11', name: 'Videos', slug: 'videos', active: true }
 ];
 

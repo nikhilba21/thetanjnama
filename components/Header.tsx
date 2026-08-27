@@ -91,16 +91,22 @@ export default function Header() {
                   🏠 होम
                 </Link>
               </li>
-              {categories.map((c) => (
-                <li key={c.slug}>
-                  <Link
-                    href={c.slug === 'nagrik-patrakarita' ? '/nagrik-patrakarita' : `/category/${c.slug}`}
-                    className="nav-link"
-                  >
-                    {c.name}
-                  </Link>
-                </li>
-              ))}
+              {categories.map((c) => {
+                const isNagrik =
+                  c.slug === 'nagrik-patrakarita' ||
+                  c.slug === 'citizen-journalism' ||
+                  c.name.includes('नागरिक पत्रकारिता');
+                return (
+                  <li key={c.slug}>
+                    <Link
+                      href={isNagrik ? '/nagrik-patrakarita' : `/category/${c.slug}`}
+                      className="nav-link"
+                    >
+                      {c.name}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </nav>
 
@@ -123,16 +129,22 @@ export default function Header() {
             </div>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <li><Link href="/" onClick={() => setMobileNavOpen(false)}>🏠 होम</Link></li>
-              {categories.map((c) => (
-                <li key={c.slug}>
-                  <Link
-                    href={c.slug === 'nagrik-patrakarita' ? '/nagrik-patrakarita' : `/category/${c.slug}`}
-                    onClick={() => setMobileNavOpen(false)}
-                  >
-                    {c.name}
-                  </Link>
-                </li>
-              ))}
+              {categories.map((c) => {
+                const isNagrik =
+                  c.slug === 'nagrik-patrakarita' ||
+                  c.slug === 'citizen-journalism' ||
+                  c.name.includes('नागरिक पत्रकारिता');
+                return (
+                  <li key={c.slug}>
+                    <Link
+                      href={isNagrik ? '/nagrik-patrakarita' : `/category/${c.slug}`}
+                      onClick={() => setMobileNavOpen(false)}
+                    >
+                      {c.name}
+                    </Link>
+                  </li>
+                );
+              })}
               <li style={{ height: '1px', background: '#e2e8f0' }}></li>
               <li><Link href="/about" onClick={() => setMobileNavOpen(false)}>About Us</Link></li>
               <li><Link href="/contact" onClick={() => setMobileNavOpen(false)}>Contact Us</Link></li>
