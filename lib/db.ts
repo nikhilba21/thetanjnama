@@ -56,9 +56,25 @@ export async function getPublishedPosts(limit = 20): Promise<Post[]> {
   return inMemoryPosts.filter((p) => p.status === 'published').slice(0, limit);
 }
 
-export async function getPostsByCategory(categoryName: string, limit = 50): Promise<Post[]> {
+export async function getPostsByCategory(categorySlugOrName: string, limit = 50): Promise<Post[]> {
   const all = await getPublishedPosts(limit);
-  return all.filter((p) => p.category.toLowerCase() === categoryName.toLowerCase());
+  const target = decodeURIComponent(categorySlugOrName).toLowerCase().trim();
+  const isVideoCategory =
+    target === 'videos' || target === 'video' || target === 'वीडियो' || target === 'वीडियो समाचार';
+
+  return all.filter((p) => {
+    const cat = (p.category || '').toLowerCase().trim();
+    if (isVideoCategory) {
+      return (
+        Boolean(p.video_url) ||
+        cat === 'videos' ||
+        cat === 'video' ||
+        cat === 'वीडियो' ||
+        cat.includes('video')
+      );
+    }
+    return cat === target || getCategorySlugFromName(p.category) === target;
+  });
 }
 
 export async function getPost(slug: string): Promise<Post | null> {
