@@ -285,7 +285,7 @@ export default function CitizenJournalismForm() {
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: '13px', fontWeight 700, color: '#334155', marginBottom: '6px' }}>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
             क्या यह आपके द्वारा बनाया गया है या साझा करने की अनुमति है? <span style={{ color: '#dc2626' }}>*</span>
           </label>
           <select
