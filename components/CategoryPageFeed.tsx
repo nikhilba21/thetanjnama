@@ -32,19 +32,40 @@ export default function CategoryPageFeed({
   const [posts, setPosts] = useState<Post[]>(initialPosts);
 
   useEffect(() => {
-    try {
-      const localStr = localStorage.getItem('tanjnama_local_articles');
-      let combined = [...initialPosts];
+    async function syncCategoryArticles() {
+      let combined: Post[] = [...initialPosts];
 
-      if (localStr) {
-        const localList: Post[] = JSON.parse(localStr);
-        localList.forEach((lp) => {
-          if (!combined.some((cp) => cp.id === lp.id || cp.slug === lp.slug)) {
-            combined.unshift(lp);
-          }
-        });
+      // 1. Fetch from API endpoint
+      try {
+        const res = await fetch('/api/posts');
+        if (res.ok) {
+          const apiPosts: Post[] = await res.json();
+          apiPosts.forEach((ap) => {
+            if (!combined.some((cp) => cp.id === ap.id || cp.slug === ap.slug)) {
+              combined.unshift(ap);
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('API post sync notice');
       }
 
+      // 2. Fetch from LocalStorage backup
+      try {
+        const localStr = localStorage.getItem('tanjnama_local_articles');
+        if (localStr) {
+          const localList: Post[] = JSON.parse(localStr);
+          localList.forEach((lp) => {
+            if (!combined.some((cp) => cp.id === lp.id || cp.slug === lp.slug)) {
+              combined.unshift(lp);
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('LocalStorage category sync notice');
+      }
+
+      // 3. Robust category filtering
       const target = decodeURIComponent(categorySlug).toLowerCase().trim();
       const targetName = categoryName.toLowerCase().trim();
       const isVideoCategory =
@@ -54,14 +75,15 @@ export default function CategoryPageFeed({
         targetName === 'वीडियो';
 
       const filtered = combined.filter((p) => {
-        // Exclude explicit drafts if status is draft
+        if (!p || !p.title) return false;
         if (p.status === 'draft') return false;
 
         const cat = (p.category || '').toLowerCase().trim();
+        const hasVideoUrl = Boolean(p.video_url && p.video_url.trim().length > 0);
 
         if (isVideoCategory) {
           return (
-            Boolean(p.video_url && p.video_url.trim().length > 0) ||
+            hasVideoUrl ||
             cat === 'videos' ||
             cat === 'video' ||
             cat === 'वीडियो' ||
@@ -69,13 +91,18 @@ export default function CategoryPageFeed({
           );
         }
 
-        return cat === target || cat === targetName;
+        return (
+          cat === target ||
+          cat === targetName ||
+          target.includes(cat) ||
+          (cat.length > 2 && target.includes(cat))
+        );
       });
 
       setPosts(filtered);
-    } catch (e) {
-      console.warn('LocalStorage category sync error');
     }
+
+    syncCategoryArticles();
   }, [categorySlug, categoryName, initialPosts]);
 
   return (
