@@ -1243,31 +1243,51 @@ export default function AdminPage() {
         {/* TAB 3: AAJ KA SAWAL (POLL MANAGER & RESPONSES) */}
         {activeTab === 'poll' && (
           <div style={{ background: '#ffffff', padding: '30px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
                 <h2 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '4px' }}>
                   ❓ "आज का सवाल" (Custom Form Builder & Submissions)
                 </h2>
                 <p style={{ fontSize: '13px', color: '#64748b' }}>
-                  यहाँ से वेबसाइट का नया सवाल व विकल्प बदलें और पाठकों के प्राप्त उत्तर (7 Fields Submissions) देखें।
+                  यहाँ से नया सवाल व विकल्प बदलें और सोशल मीडिया पर शेयर करके पाठकों के उत्तर प्राप्त करें।
                 </p>
               </div>
 
-              <button
-                onClick={() => handleTogglePollActive(!isPollActive)}
-                style={{
-                  background: isPollActive ? '#dc2626' : '#16a34a',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '10px 18px',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  fontWeight: 800,
-                  cursor: 'pointer'
-                }}
-              >
-                {isPollActive ? '❌ सवाल फॉर्म बंद करें (Deactive)' : '✅ सवाल फॉर्म चालू करें (Active)'}
-              </button>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent('आज का सवाल — TANJNAMA जनमत मंच\n\n' + (pollQuestionText || 'अपनी राय दर्ज करें') + '\n\n👉 यहाँ उत्तर दर्ज करें: https://www.tanjnama.com/aaj-ka-sawal')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ background: '#25D366', color: '#fff', padding: '8px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}
+                >
+                  💬 व्हाट्सएप पर शेयर करें
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText('https://www.tanjnama.com/aaj-ka-sawal');
+                    setStatusMsg('✅ आज का सवाल लिंक कॉपी हो गया!');
+                  }}
+                  style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  📋 लिंक कॉपी करें
+                </button>
+                <button
+                  onClick={() => handleTogglePollActive(!isPollActive)}
+                  style={{
+                    background: isPollActive ? '#dc2626' : '#16a34a',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '8px 14px',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: 800,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isPollActive ? '❌ सवाल फॉर्म बंद करें' : '✅ चालू करें'}
+                </button>
+              </div>
             </div>
 
             {/* EDIT POLL QUESTION FORM */}
@@ -1550,12 +1570,32 @@ export default function AdminPage() {
                   पाठकों द्वारा 'नागरिक पत्रकारिता' फॉर्म द्वारा भेजी गई सभी खबरें और जनसमस्याएं।
                 </p>
               </div>
-              <button
-                onClick={loadCitizenSubmissions}
-                style={{ background: '#e2e8f0', border: 'none', padding: '6px 14px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}
-              >
-                🔄 रीफ्रेश करें ({citizenSubmissions.length})
-              </button>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent('नागरिक पत्रकारिता में योगदान दें — आपकी खबर, आपके क्षेत्र की आवाज़\n\nअपने क्षेत्र की समस्याएं व खबरें हमारे साथ साझा करें:\n👉 https://www.tanjnama.com/nagrik-patrakarita')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ background: '#25D366', color: '#fff', padding: '6px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: 700, textDecoration: 'none' }}
+                >
+                  💬 व्हाट्सएप पर शेयर करें
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText('https://www.tanjnama.com/nagrik-patrakarita');
+                    setStatusMsg('✅ नागरिक पत्रकारिता लिंक कॉपी हो गया!');
+                  }}
+                  style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  📋 लिंक कॉपी करें
+                </button>
+                <button
+                  onClick={loadCitizenSubmissions}
+                  style={{ background: '#e2e8f0', border: 'none', padding: '6px 14px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  🔄 रीफ्रेश करें ({citizenSubmissions.length})
+                </button>
+              </div>
             </div>
 
             {citizenSubmissions.length === 0 ? (

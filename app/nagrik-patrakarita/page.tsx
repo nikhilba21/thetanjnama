@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import CitizenJournalismForm from '@/components/CitizenJournalismForm';
+import SocialShareBar from '@/components/SocialShareBar';
 
 export const metadata: Metadata = {
   title: 'नागरिक पत्रकारिता में योगदान दें — आपकी खबर, आपके क्षेत्र की आवाज़ | TANJNAMA',
@@ -60,6 +61,13 @@ export default function NagrikPatrakaritaPage() {
             आपकी खबर, आपके क्षेत्र की आवाज़
           </p>
         </div>
+
+        {/* SOCIAL SHARE BAR */}
+        <SocialShareBar
+          title="नागरिक पत्रकारिता में योगदान दें — आपकी खबर, आपके क्षेत्र की आवाज़"
+          url="https://www.tanjnama.com/nagrik-patrakarita"
+          subtext="अपने क्षेत्र की जनसमस्याएं, महत्वपूर्ण खबरें व नागरिक लेख हमारे साथ साझा करने के लिए इस लिंक पर क्लिक करें:"
+        />
 
         {/* POLICY CONTENT DOCUMENT */}
         <div
