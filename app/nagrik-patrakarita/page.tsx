@@ -119,32 +119,32 @@ export default function NagrikPatrakaritaPage() {
             </div>
 
             <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', borderLeft: '4px solid var(--primary)' }}>
-              <h3 style={{ fontSize: '16px', fontWeight 700, color: '#0f172a', marginBottom: '4px' }}>3. वायरल खबरों में सावधानी रखें</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>3. वायरल खबरों में सावधानी रखें</h3>
               <p style={{ margin: 0, fontSize: '14px' }}>यदि आप सोशल मीडिया पर वायरल किसी दावे या खबर के बारे में जानकारी भेज रहे हैं, तो उसे स्पष्ट रूप से “सत्यापन हेतु” बताएं।</p>
             </div>
 
             <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', borderLeft: '4px solid var(--primary)' }}>
-              <h3 style={{ fontSize: '16px', fontWeight 700, color: '#0f172a', marginBottom: '4px' }}>4. निजी जानकारी साझा न करें</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>4. निजी जानकारी साझा न करें</h3>
               <p style={{ margin: 0, fontSize: '14px' }}>किसी व्यक्ति का मोबाइल नंबर, घर का पता, पहचान-पत्र, बैंक संबंधी जानकारी या अन्य निजी जानकारी उसकी अनुमति के बिना साझा न करें, जब तक उसका स्पष्ट और उचित जनहित संबंध न हो।</p>
             </div>
 
             <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', borderLeft: '4px solid var(--primary)' }}>
-              <h3 style={{ fontSize: '16px', fontWeight 700, color: '#0f172a', marginBottom: '4px' }}>5. फोटो और वीडियो</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>5. फोटो और वीडियो</h3>
               <p style={{ margin: 0, fontSize: '14px' }}>जहाँ तक संभव हो, स्वयं द्वारा बनाए गए फोटो और वीडियो भेजें। किसी अन्य वेबसाइट, समाचार माध्यम या सोशल मीडिया अकाउंट से सामग्री कॉपी करके न भेजें।</p>
             </div>
 
             <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', borderLeft: '4px solid var(--primary)' }}>
-              <h3 style={{ fontSize: '16px', fontWeight 700, color: '#0f172a', marginBottom: '4px' }}>6. कॉपीराइट का सम्मान करें</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>6. कॉपीराइट का सम्मान करें</h3>
               <p style={{ margin: 0, fontSize: '14px' }}>किसी अन्य व्यक्ति या संस्था की कॉपीराइट-संरक्षित फोटो, वीडियो, लेख या अन्य सामग्री को बिना उचित अधिकार/अनुमति के भेजने से बचें।</p>
             </div>
 
             <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', borderLeft: '4px solid var(--primary)' }}>
-              <h3 style={{ fontSize: '16px', fontWeight 700, color: '#0f172a', marginBottom: '4px' }}>7. आपत्तिजनक सामग्री न भेजें</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>7. आपत्तिजनक सामग्री न भेजें</h3>
               <p style={{ margin: 0, fontSize: '14px' }}>अश्लील, घृणा फैलाने वाली, धमकीपूर्ण, भेदभावपूर्ण या किसी व्यक्ति अथवा समुदाय को निशाना बनाने वाली सामग्री स्वीकार नहीं की जाएगी।</p>
             </div>
 
             <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', borderLeft: '4px solid var(--primary)' }}>
-              <h3 style={{ fontSize: '16px', fontWeight 700, color: '#0f172a', marginBottom: '4px' }}>8. व्यक्तिगत विवाद से बचें</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>8. व्यक्तिगत विवाद से बचें</h3>
               <p style={{ margin: 0, fontSize: '14px' }}>नागरिक पत्रकारिता का उपयोग व्यक्तिगत दुश्मनी, बदला लेने, किसी व्यक्ति को बदनाम करने या निजी विवाद को सार्वजनिक करने के लिए न करें।</p>
             </div>
           </div>
