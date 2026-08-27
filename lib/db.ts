@@ -10,6 +10,7 @@ export type Post = {
   category: string;
   author: string;
   featured_image: string | null;
+  video_url?: string | null;
   status: 'draft' | 'published';
   seo_title: string | null;
   seo_description: string | null;
@@ -90,6 +91,7 @@ export async function createPost(data: Partial<Post>): Promise<Post> {
     category: data.category || 'राष्ट्रीय',
     author: data.author || 'तंजनामा डेस्क',
     featured_image: data.featured_image || null,
+    video_url: data.video_url || null,
     status: data.status || 'draft',
     seo_title: data.seo_title || data.title || null,
     seo_description: data.seo_description || data.excerpt || null,

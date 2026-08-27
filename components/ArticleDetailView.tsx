@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AdSense from '@/components/AdSense';
+import VideoPlayer from '@/components/VideoPlayer';
 
 type Post = {
   id: string;
@@ -12,6 +13,7 @@ type Post = {
   category: string;
   author: string;
   featured_image: string | null;
+  video_url?: string | null;
   status: 'draft' | 'published';
   published_at?: string | null;
 };
@@ -55,7 +57,7 @@ export default function ArticleDetailView({ initialPost, slug, allPosts }: Artic
   const relatedPosts = allPosts.filter((item) => item.slug !== post.slug).slice(0, 3);
   const wordCount = post.content.split(/\s+/).length;
   const readTimeMin = Math.max(1, Math.ceil(wordCount / 180));
-  const postUrl = typeof window !== 'undefined' ? window.location.href : `https://thetanjnama-omega.vercel.app/posts/${post.slug}`;
+  const postUrl = typeof window !== 'undefined' ? window.location.href : `https://www.tanjnama.com/posts/${post.slug}`;
 
   return (
     <article className="article-container">
@@ -75,9 +77,13 @@ export default function ArticleDetailView({ initialPost, slug, allPosts }: Artic
         </div>
       </div>
 
-      {/* FEATURED IMAGE */}
-      {post.featured_image && (
-        <img src={post.featured_image} alt={post.title} className="article-featured-img" />
+      {/* EMBEDDED VIDEO PLAYER (IF VIDEO URL IS PRESENT) */}
+      {post.video_url ? (
+        <VideoPlayer videoUrl={post.video_url} title={post.title} />
+      ) : (
+        post.featured_image && (
+          <img src={post.featured_image} alt={post.title} className="article-featured-img" />
+        )
       )}
 
       {/* EXCERPT LEAD */}

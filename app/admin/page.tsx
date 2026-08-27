@@ -11,6 +11,7 @@ type Post = {
   category: string;
   author: string;
   featured_image: string | null;
+  video_url?: string | null;
   status: 'draft' | 'published';
   seo_title?: string | null;
   seo_description?: string | null;
@@ -66,6 +67,7 @@ const blankForm: Post = {
   category: 'राष्ट्रीय',
   author: 'तंजनामा डेस्क',
   featured_image: '',
+  video_url: '',
   status: 'draft',
   seo_title: '',
   seo_description: ''
@@ -990,6 +992,28 @@ export default function AdminPage() {
                         🗑️ मीडिया हटाएँ
                       </button>
                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* DEDICATED YOUTUBE / VIDEO URL EMBED BOX */}
+              <div style={{ background: '#f8fafc', padding: '18px', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>
+                  🎥 वीडियो एम्बेड (YouTube / Shorts / Video Link Embed)
+                </label>
+                <span style={{ display: 'block', fontSize: '12px', color: '#64748b', marginBottom: '8px' }}>
+                  यूट्यूब वीडियो या Shorts का लिंक पेस्ट करें (उदा. https://www.youtube.com/watch?v=... या https://youtube.com/shorts/...)
+                </span>
+                <input
+                  type="url"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  value={form.video_url || ''}
+                  onChange={(e) => setField('video_url', e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                />
+                {form.video_url && (
+                  <div style={{ marginTop: '10px', fontSize: '12px', color: '#166534', fontWeight: 600 }}>
+                    ✅ वीडियो लिंक सेट हो गया है! खबर खोलते ही सुपरफास्ट वीडियो प्लेयर दिखेगा।
                   </div>
                 )}
               </div>
