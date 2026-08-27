@@ -1,3 +1,5 @@
+import { getCategorySlugFromName } from '@/lib/categories';
+
 const base = process.env.TANJNAMA_SUPABASE_URL;
 const key = process.env.TANJNAMA_SUPABASE_SERVICE_ROLE_KEY;
 
@@ -66,7 +68,7 @@ export async function getPostsByCategory(categorySlugOrName: string, limit = 50)
     const cat = (p.category || '').toLowerCase().trim();
     if (isVideoCategory) {
       return (
-        Boolean(p.video_url) ||
+        Boolean(p.video_url && p.video_url.trim().length > 0) ||
         cat === 'videos' ||
         cat === 'video' ||
         cat === 'वीडियो' ||
@@ -108,10 +110,10 @@ export async function createPost(data: Partial<Post>): Promise<Post> {
     author: data.author || 'तंजनामा डेस्क',
     featured_image: data.featured_image || null,
     video_url: data.video_url || null,
-    status: data.status || 'draft',
+    status: data.status || 'published',
     seo_title: data.seo_title || data.title || null,
     seo_description: data.seo_description || data.excerpt || null,
-    published_at: data.status === 'published' ? new Date().toISOString() : null,
+    published_at: data.status === 'draft' ? null : new Date().toISOString(),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   };
