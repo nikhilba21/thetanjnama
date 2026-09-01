@@ -8,21 +8,23 @@ interface RichTextEditorProps {
 
 export default function RichTextEditor({ value, onChange }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isHtmlView, setIsHtmlView] = useState(false);
   const [rawHtml, setRawHtml] = useState(value || '');
   const isUpdatingRef = useRef(false);
 
-  // Sync external value updates
+  // Sync initial and external updates
   useEffect(() => {
     if (!isUpdatingRef.current) {
-      if (editorRef.current && editorRef.current.innerHTML !== (value || '')) {
-        editorRef.current.innerHTML = value || '';
+      const incoming = value || '';
+      if (editorRef.current && editorRef.current.innerHTML !== incoming) {
+        editorRef.current.innerHTML = incoming;
       }
-      setRawHtml(value || '');
+      setRawHtml(incoming);
     }
   }, [value]);
 
-  const handleInput = () => {
+  const handleVisualInput = () => {
     if (editorRef.current) {
       isUpdatingRef.current = true;
       const html = editorRef.current.innerHTML;
@@ -37,6 +39,9 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
   const handleRawHtmlChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
     setRawHtml(val);
+    if (editorRef.current) {
+      editorRef.current.innerHTML = val;
+    }
     onChange(val);
   };
 
@@ -57,9 +62,12 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
     setIsHtmlView(true);
   };
 
-  const execCmd = (command: string, value: string | undefined = undefined) => {
-    document.execCommand(command, false, value);
-    handleInput();
+  const execCmd = (command: string, cmdValue: string | undefined = undefined) => {
+    if (isHtmlView) {
+      switchToComposeMode();
+    }
+    document.execCommand(command, false, cmdValue);
+    handleVisualInput();
   };
 
   const handleInsertLink = () => {
@@ -83,8 +91,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
       const videoId = match ? match[1] : null;
       if (videoId) {
         const embedHtml = `<div class="embedded-video-box" style="position:relative;padding-top:56.25%;margin:16px 0;background:#000;border-radius:8px;overflow:hidden;"><iframe src="https://www.youtube-nocookie.com/embed/${videoId}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe></div>`;
-        document.execCommand('insertHTML', false, embedHtml);
-        handleInput();
+        execCmd('insertHTML', embedHtml);
       } else {
         alert('अमान्य यूट्यूब लिंक!');
       }
@@ -121,7 +128,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
         }}
       >
         {/* EXPLICIT MODE TOGGLES */}
-        <div style={{ display: 'inline-flex', background: '#cbd5e1', padding: '2px', borderRadius: '6px', marginRight: '8px' }}>
+        <div style={{ display: 'inline-flex', background: '#e2e8f0', padding: '2px', borderRadius: '6px', marginRight: '8px' }}>
           <button
             type="button"
             onClick={switchToComposeMode}
@@ -129,14 +136,14 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
               background: !isHtmlView ? 'var(--primary)' : 'transparent',
               color: !isHtmlView ? '#ffffff' : '#475569',
               border: 'none',
-              padding: '4px 10px',
+              padding: '5px 12px',
               borderRadius: '4px',
               fontSize: '12px',
               fontWeight: 800,
               cursor: 'pointer'
             }}
           >
-            ✏️ Compose (विजुअल)
+            ✏️ Compose (विजुअल मोड)
           </button>
           <button
             type="button"
@@ -145,14 +152,14 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
               background: isHtmlView ? '#0f172a' : 'transparent',
               color: isHtmlView ? '#ffffff' : '#475569',
               border: 'none',
-              padding: '4px 10px',
+              padding: '5px 12px',
               borderRadius: '4px',
               fontSize: '12px',
               fontWeight: 800,
               cursor: 'pointer'
             }}
           >
-            💻 HTML (कोड)
+            💻 HTML (कोड मोड)
           </button>
         </div>
 
@@ -279,42 +286,45 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
         )}
       </div>
 
-      {/* EDITOR CANVAS AREA */}
-      {isHtmlView ? (
-        <textarea
-          value={rawHtml}
-          onChange={handleRawHtmlChange}
-          rows={16}
-          placeholder="यहाँ HTML कोड पेस्ट या टाइप करें..."
-          style={{
-            width: '100%',
-            padding: '16px',
-            border: 'none',
-            fontFamily: 'monospace',
-            fontSize: '13px',
-            lineHeight: '1.6',
-            background: '#0f172a',
-            color: '#38bdf8',
-            resize: 'vertical',
-            boxSizing: 'border-box'
-          }}
-        />
-      ) : (
-        <div
-          ref={editorRef}
-          contentEditable
-          onInput={handleInput}
-          style={{
-            minHeight: '320px',
-            padding: '18px 24px',
-            fontSize: '15px',
-            lineHeight: '1.8',
-            color: '#1e293b',
-            outline: 'none',
-            boxSizing: 'border-box'
-          }}
-        />
-      )}
+      {/* BOTH ELEMENTS REMAIN MOUNTED IN DOM AT ALL TIMES TO PREVENT ANY LOSS OF CONTENT */}
+      {/* 1. VISUAL COMPOSE CANVAS */}
+      <div
+        ref={editorRef}
+        contentEditable
+        onInput={handleVisualInput}
+        style={{
+          display: isHtmlView ? 'none' : 'block',
+          minHeight: '340px',
+          padding: '18px 24px',
+          fontSize: '15px',
+          lineHeight: '1.8',
+          color: '#1e293b',
+          outline: 'none',
+          boxSizing: 'border-box'
+        }}
+      />
+
+      {/* 2. RAW HTML CODE CANVAS */}
+      <textarea
+        ref={textareaRef}
+        value={rawHtml}
+        onChange={handleRawHtmlChange}
+        rows={16}
+        placeholder="यहाँ HTML कोड पेस्ट या टाइप करें..."
+        style={{
+          display: isHtmlView ? 'block' : 'none',
+          width: '100%',
+          padding: '16px',
+          border: 'none',
+          fontFamily: 'monospace',
+          fontSize: '13px',
+          lineHeight: '1.6',
+          background: '#0f172a',
+          color: '#38bdf8',
+          resize: 'vertical',
+          boxSizing: 'border-box'
+        }}
+      />
     </div>
   );
 }
