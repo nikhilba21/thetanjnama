@@ -723,7 +723,7 @@ export default function AdminPage() {
           </form>
 
           <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '11px', color: '#94a3b8' }}>
-            डिफ़ॉल्ट लॉगिन — ID: <code>admin</code> | Pass: <code>tanjnama2026</code>
+            सुरक्षित एडमिन कंसोल — TANJNAMA Media
           </div>
         </div>
       </div>
