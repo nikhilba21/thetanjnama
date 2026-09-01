@@ -6,14 +6,8 @@ type TickerItem = {
   text: string;
 };
 
-const defaultItems: TickerItem[] = [
-  { id: '1', text: 'TANJNAMA डिजिटल मंच पर आपका स्वागत है — सोच पर तंज, सच के साथ!' },
-  { id: '2', text: 'राजस्थान की सियासत में फिर तेज हुई हलचल, बड़े फैसले पर सबकी नजर।' },
-  { id: '3', text: 'देश की राजनीति और सामाजिक मुद्दों पर तंजनामा का तीखा निष्पक्ष विश्लेषण।' }
-];
-
 export default function BreakingTicker() {
-  const [items, setItems] = useState<TickerItem[]>(defaultItems);
+  const [items, setItems] = useState<TickerItem[]>([]);
   const [isActive, setIsActive] = useState<boolean>(true);
 
   useEffect(() => {
@@ -25,12 +19,12 @@ export default function BreakingTicker() {
           if (typeof data.active === 'boolean') {
             setIsActive(data.active);
           }
-          if (data.items && data.items.length > 0) {
+          if (data.items && Array.isArray(data.items)) {
             setItems(data.items);
           }
         }
       } catch (e) {
-        console.warn('Ticker load error, using default items');
+        console.warn('Ticker load error');
       }
     }
     loadTicker();

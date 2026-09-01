@@ -14,6 +14,7 @@ export type Post = {
   category: string;
   author: string;
   featured_image: string | null;
+  video_url?: string | null;
   status: 'draft' | 'published';
   published_at?: string | null;
 };
@@ -26,28 +27,42 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
   const [posts, setPosts] = useState<Post[]>(initialPosts);
 
   useEffect(() => {
-    try {
-      const localStr = localStorage.getItem('tanjnama_local_articles');
-      if (localStr) {
-        const localArticles: Post[] = JSON.parse(localStr);
-        const publishedLocal = localArticles.filter((p) => p.status === 'published');
+    async function loadAllHomePosts() {
+      let merged = [...initialPosts];
 
-        if (publishedLocal.length > 0) {
-          setPosts((prev) => {
-            const merged = [...publishedLocal];
-            prev.forEach((p) => {
-              if (!merged.some((m) => m.id === p.id || m.slug === p.slug)) {
-                merged.push(p);
-              }
-            });
-            return merged;
+      try {
+        const res = await fetch('/api/posts');
+        if (res.ok) {
+          const apiPosts: Post[] = await res.json();
+          apiPosts.forEach((ap) => {
+            if (ap.status === 'published' && !merged.some((m) => m.id === ap.id || m.slug === ap.slug)) {
+              merged.push(ap);
+            }
           });
         }
+      } catch (e) {
+        console.warn('API fetch notice on home feed');
       }
-    } catch (e) {
-      console.warn('LocalStorage load error on homepage');
+
+      try {
+        const localStr = localStorage.getItem('tanjnama_local_articles');
+        if (localStr) {
+          const localArticles: Post[] = JSON.parse(localStr);
+          localArticles.forEach((lp) => {
+            if (lp.status === 'published' && !merged.some((m) => m.id === lp.id || m.slug === lp.slug)) {
+              merged.unshift(lp);
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('LocalStorage load notice on homepage');
+      }
+
+      setPosts(merged);
     }
-  }, []);
+
+    loadAllHomePosts();
+  }, [initialPosts]);
 
   const heroPost = posts[0];
   const hotPosts = posts.slice(1, 4);
@@ -57,57 +72,86 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
     <div className="main-layout">
       {/* MAIN NEWS FEED */}
       <section className="feed-section">
-        {/* HERO SECTION */}
-        {heroPost && (
-          <div className="hero-grid">
-            <Link href={`/posts/${heroPost.slug}`} className="main-lead-card">
-              <div className="lead-image-box">
-                <img
-                  src={
-                    heroPost.featured_image ||
-                    'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&q=80'
-                  }
-                  alt={heroPost.title}
-                />
-                <span className="cat-badge">{heroPost.category}</span>
-              </div>
-              <div className="lead-content">
-                <h1>{heroPost.title}</h1>
-                <p>{heroPost.excerpt}</p>
-                <div className="post-meta-line">
-                  <span>✍️ {heroPost.author}</span>
-                  <span>•</span>
-                  <span>📅 {new Date(heroPost.published_at || Date.now()).toLocaleDateString('hi-IN')}</span>
-                </div>
-              </div>
+        {posts.length === 0 ? (
+          <div
+            className="card"
+            style={{
+              padding: '48px 24px',
+              textAlign: 'center',
+              background: '#ffffff',
+              borderRadius: '8px',
+              border: '1px solid #cbd5e1',
+              marginBottom: '32px'
+            }}
+          >
+            <div style={{ fontSize: '42px', marginBottom: '12px' }}>📰</div>
+            <h2 style={{ fontSize: '20px', color: '#0f172a', fontWeight: 800, marginBottom: '8px' }}>
+              स्वागत है TANJNAMA पर!
+            </h2>
+            <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '20px' }}>
+              अभी कोई नया लेख प्रकाशित नहीं हुआ है। नए लेख पढ़ने के लिए शीघ्र ही पुनः पधारें या एडमिन पैनल ([/admin](https://www.tanjnama.com/admin)) से पहली खबर प्रकाशित करें।
+            </p>
+            <Link href="/admin" className="btn-primary" style={{ display: 'inline-block' }}>
+              🔑 एडमिन लॉगिन (कंटेंट पोर्टल)
             </Link>
-
-            {/* HOT STORIES COLUMN */}
-            <div className="hot-stories-list">
-              <div className="section-title-box" style={{ marginBottom: '14px' }}>
-                <h2 style={{ fontSize: '18px' }}>🔥 ट्रेंडिंग खबरें</h2>
-              </div>
-              {hotPosts.map((p) => (
-                <Link href={`/posts/${p.slug}`} className="hot-story-item" key={p.id}>
-                  <div className="hot-story-thumb">
+          </div>
+        ) : (
+          <>
+            {/* HERO SECTION */}
+            {heroPost && (
+              <div className="hero-grid">
+                <Link href={`/posts/${heroPost.slug}`} className="main-lead-card">
+                  <div className="lead-image-box">
                     <img
                       src={
-                        p.featured_image ||
-                        'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=400&q=80'
+                        heroPost.featured_image ||
+                        'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&q=80'
                       }
-                      alt={p.title}
+                      alt={heroPost.title}
                     />
+                    <span className="cat-badge">{heroPost.category}</span>
                   </div>
-                  <div className="hot-story-info">
-                    <h3>{p.title}</h3>
-                    <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 700 }}>
-                      {p.category}
-                    </span>
+                  <div className="lead-content">
+                    <h1>{heroPost.title}</h1>
+                    <p>{heroPost.excerpt}</p>
+                    <div className="post-meta-line">
+                      <span>✍️ {heroPost.author}</span>
+                      <span>•</span>
+                      <span>📅 {new Date(heroPost.published_at || Date.now()).toLocaleDateString('hi-IN')}</span>
+                    </div>
                   </div>
                 </Link>
-              ))}
-            </div>
-          </div>
+
+                {/* HOT STORIES COLUMN */}
+                {hotPosts.length > 0 && (
+                  <div className="hot-stories-list">
+                    <div className="section-title-box" style={{ marginBottom: '14px' }}>
+                      <h2 style={{ fontSize: '18px' }}>🔥 ट्रेंडिंग खबरें</h2>
+                    </div>
+                    {hotPosts.map((p) => (
+                      <Link href={`/posts/${p.slug}`} className="hot-story-item" key={p.id || p.slug}>
+                        <div className="hot-story-thumb">
+                          <img
+                            src={
+                              p.featured_image ||
+                              'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=400&q=80'
+                            }
+                            alt={p.title}
+                          />
+                        </div>
+                        <div className="hot-story-info">
+                          <h3>{p.title}</h3>
+                          <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 700 }}>
+                            {p.category}
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         )}
 
         {/* SARCASM SPOTLIGHT BOX */}
@@ -133,36 +177,40 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
         </div>
 
         {/* LATEST POSTS GRID */}
-        <div className="section-title-box">
-          <h2>ताज़ा लेख एवं विश्लेषण</h2>
-          <span style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 700 }}>नवीनतम अपडेट</span>
-        </div>
+        {mainPosts.length > 0 && (
+          <>
+            <div className="section-title-box">
+              <h2>ताज़ा लेख एवं विश्लेषण</h2>
+              <span style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 700 }}>नवीनतम अपडेट</span>
+            </div>
 
-        <div className="posts-grid">
-          {mainPosts.map((p) => (
-            <Link href={`/posts/${p.slug}`} className="post-card" key={p.id}>
-              <div className="post-card-image">
-                <img
-                  src={
-                    p.featured_image ||
-                    'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80'
-                  }
-                  alt={p.title}
-                />
-                <span className="cat-badge">{p.category}</span>
-              </div>
-              <div className="post-card-content">
-                <h3>{p.title}</h3>
-                <p>{p.excerpt}</p>
-                <div className="post-meta-line">
-                  <span>{new Date(p.published_at || Date.now()).toLocaleDateString('hi-IN')}</span>
-                  <span>•</span>
-                  <span>{p.author}</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+            <div className="posts-grid">
+              {mainPosts.map((p) => (
+                <Link href={`/posts/${p.slug}`} className="post-card" key={p.id || p.slug}>
+                  <div className="post-card-image">
+                    <img
+                      src={
+                        p.featured_image ||
+                        'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80'
+                      }
+                      alt={p.title}
+                    />
+                    <span className="cat-badge">{p.category}</span>
+                  </div>
+                  <div className="post-card-content">
+                    <h3>{p.title}</h3>
+                    <p>{p.excerpt}</p>
+                    <div className="post-meta-line">
+                      <span>{new Date(p.published_at || Date.now()).toLocaleDateString('hi-IN')}</span>
+                      <span>•</span>
+                      <span>{p.author}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* IN-FEED ADSENSE PLACEMENT */}
         <AdSense slot="in-feed-home" format="auto" />
@@ -179,24 +227,26 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
         </div>
 
         {/* POPULAR POSTS WIDGET */}
-        <div className="sidebar-widget">
-          <h3 className="widget-title">📌 सर्वाधिक पढ़े गए लेख</h3>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {posts.slice(0, 5).map((p, i) => (
-              <Link href={`/posts/${p.slug}`} className="popular-item" key={p.id}>
-                <span className="popular-num">{String(i + 1).padStart(2, '0')}</span>
-                <span className="popular-text">{p.title}</span>
-              </Link>
-            ))}
+        {posts.length > 0 && (
+          <div className="sidebar-widget">
+            <h3 className="widget-title">📌 सर्वाधिक पढ़े गए लेख</h3>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {posts.slice(0, 5).map((p, i) => (
+                <Link href={`/posts/${p.slug}`} className="popular-item" key={p.id || p.slug}>
+                  <span className="popular-num">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="popular-text">{p.title}</span>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* CATEGORIES WIDGET WITH ENGLISH URL SLUGS */}
         <div className="sidebar-widget">
           <h3 className="widget-title">🏷️ विषय व श्रेणियां</h3>
           <div className="cat-pills">
             {CATEGORY_LIST.map((c) => (
-              <Link key={c.slug} href={`/category/${c.slug}`} className="cat-pill">
+              <Link key={c.slug} href={c.slug === 'nagrik-patrakarita' ? '/nagrik-patrakarita' : `/category/${c.slug}`} className="cat-pill">
                 {c.name}
               </Link>
             ))}
