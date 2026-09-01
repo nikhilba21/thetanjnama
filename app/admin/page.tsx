@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import RichTextEditor from '@/components/RichTextEditor';
 
 type Post = {
   id?: string;
@@ -1075,38 +1076,19 @@ export default function AdminPage() {
               </div>
 
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-                  लेख की मुख्य सामग्री (Article Content) *
-                </label>
-
-                {/* Quick Formatting & Media Bar */}
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', background: '#f1f5f9', padding: '8px', borderRadius: '6px 6px 0 0', border: '1px solid #cbd5e1', borderBottom: 'none', alignItems: 'center' }}>
-                  <button type="button" onClick={() => insertFormatting('<h2>', '</h2>')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
-                    H2 हेडिंग
-                  </button>
-                  <button type="button" onClick={() => insertFormatting('<blockquote>', '</blockquote>')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
-                    Quote उद्धरण
-                  </button>
-                  <button type="button" onClick={() => insertFormatting('<b>', '</b>')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
-                    Bold टेक्स्ट
-                  </button>
-                  <button type="button" onClick={() => insertFormatting('\n- पॉइंट 1\n- पॉइंट 2\n')} style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
-                    Bullet List
-                  </button>
-
-                  <label style={{ background: 'var(--primary)', color: '#fff', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>
+                    ✍️ लेख की मुख्य सामग्री (Rich Text Article Editor) *
+                  </label>
+                  <label style={{ background: 'var(--primary)', color: '#fff', padding: '6px 12px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     📷 बॉडी में फोटो/मीडिया इन्सर्ट करें
                     <input type="file" accept="image/*" onChange={handleInsertBodyMedia} style={{ display: 'none' }} />
                   </label>
                 </div>
 
-                <textarea
-                  rows={14}
-                  placeholder="यहाँ पूरी खबर या विश्लेषण विस्तार से लिखें..."
+                <RichTextEditor
                   value={form.content}
-                  onChange={(e) => setField('content', e.target.value)}
-                  style={{ width: '100%', padding: '12px', borderRadius: '0 0 6px 6px', border: '1px solid #cbd5e1', fontSize: '15px', fontFamily: 'inherit' }}
-                  required
+                  onChange={(htmlContent) => setField('content', htmlContent)}
                 />
               </div>
 
