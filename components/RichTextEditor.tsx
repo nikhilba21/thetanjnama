@@ -9,17 +9,17 @@ interface RichTextEditorProps {
 export default function RichTextEditor({ value, onChange }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isHtmlView, setIsHtmlView] = useState(false);
-  const [rawHtml, setRawHtml] = useState(value);
+  const [rawHtml, setRawHtml] = useState(value || '');
   const isUpdatingRef = useRef(false);
 
-  // Sync value from props to editor DOM when value changes externally
+  // Sync external value updates
   useEffect(() => {
-    if (editorRef.current && !isUpdatingRef.current) {
-      if (editorRef.current.innerHTML !== value) {
+    if (!isUpdatingRef.current) {
+      if (editorRef.current && editorRef.current.innerHTML !== (value || '')) {
         editorRef.current.innerHTML = value || '';
       }
+      setRawHtml(value || '');
     }
-    setRawHtml(value || '');
   }, [value]);
 
   const handleInput = () => {
@@ -38,9 +38,23 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
     const val = e.target.value;
     setRawHtml(val);
     onChange(val);
+  };
+
+  const switchToComposeMode = () => {
     if (editorRef.current) {
-      editorRef.current.innerHTML = val;
+      editorRef.current.innerHTML = rawHtml;
     }
+    onChange(rawHtml);
+    setIsHtmlView(false);
+  };
+
+  const switchToHtmlMode = () => {
+    if (editorRef.current) {
+      const currentVisualContent = editorRef.current.innerHTML;
+      setRawHtml(currentVisualContent);
+      onChange(currentVisualContent);
+    }
+    setIsHtmlView(true);
   };
 
   const execCmd = (command: string, value: string | undefined = undefined) => {
@@ -56,7 +70,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
   };
 
   const handleInsertImage = () => {
-    const url = prompt('इमेज का URL दर्ज करें (या कंप्यूटर/मोबाइल फ़ाइल अपलोड ऑप्शन प्रयोग करें):', 'https://');
+    const url = prompt('इमेज का URL दर्ज करें:', 'https://');
     if (url) {
       execCmd('insertImage', url);
     }
@@ -106,25 +120,41 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
           userSelect: 'none'
         }}
       >
-        {/* VIEW TOGGLE (COMPOSE VS HTML) */}
-        <button
-          type="button"
-          title="Compose / HTML Source View Switch"
-          onClick={() => setIsHtmlView(!isHtmlView)}
-          style={{
-            background: isHtmlView ? '#0f172a' : '#e2e8f0',
-            color: isHtmlView ? '#ffffff' : '#0f172a',
-            border: 'none',
-            padding: '5px 10px',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            marginRight: '6px'
-          }}
-        >
-          {isHtmlView ? '💻 HTML Code' : '✏️ Compose'}
-        </button>
+        {/* EXPLICIT MODE TOGGLES */}
+        <div style={{ display: 'inline-flex', background: '#cbd5e1', padding: '2px', borderRadius: '6px', marginRight: '8px' }}>
+          <button
+            type="button"
+            onClick={switchToComposeMode}
+            style={{
+              background: !isHtmlView ? 'var(--primary)' : 'transparent',
+              color: !isHtmlView ? '#ffffff' : '#475569',
+              border: 'none',
+              padding: '4px 10px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 800,
+              cursor: 'pointer'
+            }}
+          >
+            ✏️ Compose (विजुअल)
+          </button>
+          <button
+            type="button"
+            onClick={switchToHtmlMode}
+            style={{
+              background: isHtmlView ? '#0f172a' : 'transparent',
+              color: isHtmlView ? '#ffffff' : '#475569',
+              border: 'none',
+              padding: '4px 10px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 800,
+              cursor: 'pointer'
+            }}
+          >
+            💻 HTML (कोड)
+          </button>
+        </div>
 
         <span style={{ height: '18px', width: '1px', background: '#cbd5e1', margin: '0 4px' }}></span>
 
@@ -255,6 +285,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
           value={rawHtml}
           onChange={handleRawHtmlChange}
           rows={16}
+          placeholder="यहाँ HTML कोड पेस्ट या टाइप करें..."
           style={{
             width: '100%',
             padding: '16px',
@@ -274,7 +305,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
           contentEditable
           onInput={handleInput}
           style={{
-            minHeight: '300px',
+            minHeight: '320px',
             padding: '18px 24px',
             fontSize: '15px',
             lineHeight: '1.8',
