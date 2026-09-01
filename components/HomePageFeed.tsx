@@ -100,12 +100,9 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
             <h2 style={{ fontSize: '20px', color: '#0f172a', fontWeight: 800, marginBottom: '8px' }}>
               स्वागत है TANJNAMA पर!
             </h2>
-            <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '20px' }}>
-              अभी कोई नया लेख प्रकाशित नहीं हुआ है। एडमिन पैनल से अपनी पहली खबर प्रकाशित करें।
+            <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>
+              अभी कोई नया लेख प्रकाशित नहीं हुआ है। ताजा खबरों और निष्पक्ष विश्लेषण के लिए शीघ्र ही पुनः पधारें।
             </p>
-            <Link href="/admin" className="btn-primary" style={{ display: 'inline-block' }}>
-              🔑 एडमिन लॉगिन (कंटेंट पोर्टल)
-            </Link>
           </div>
         ) : (
           <>

@@ -127,11 +127,8 @@ export default function CategoryPageFeed({
 
           {posts.length === 0 ? (
             <div className="card" style={{ padding: '40px', textAlign: 'center' }}>
-              <p style={{ fontSize: '16px', color: '#64748b', marginBottom: '8px' }}>
-                इस श्रेणी में अभी कोई खबर प्रकाशित नहीं हुई है।
-              </p>
-              <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '16px' }}>
-                (यदि आपने एडमिन से खबर जोड़ी है, तो सुनिश्चित करें कि स्टेटस <strong>'Published (लाइव वेबसाइट)'</strong> सेट हो)
+              <p style={{ fontSize: '15px', color: '#64748b', marginBottom: '16px' }}>
+                इस श्रेणी में अभी कोई नया लेख प्रकाशित नहीं हुआ है। ताजा खबरों के लिए शीघ्र ही पुनः पधारें।
               </p>
               <Link href="/" className="btn-primary" style={{ display: 'inline-block' }}>
                 होमपेज पर वापस जाएं
