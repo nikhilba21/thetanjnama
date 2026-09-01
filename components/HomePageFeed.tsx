@@ -49,8 +49,13 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
         if (localStr) {
           const localArticles: Post[] = JSON.parse(localStr);
           localArticles.forEach((lp) => {
-            if (lp.status === 'published' && !merged.some((m) => m.id === lp.id || m.slug === lp.slug)) {
-              merged.unshift(lp);
+            if (lp.status === 'published') {
+              const idx = merged.findIndex((m) => m.id === lp.id || m.slug === lp.slug);
+              if (idx !== -1) {
+                merged[idx] = lp; // Override with local edit containing uploaded media
+              } else {
+                merged.unshift(lp);
+              }
             }
           });
         }
@@ -67,6 +72,13 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
   const heroPost = posts[0];
   const hotPosts = posts.slice(1, 4);
   const mainPosts = posts.slice(4);
+
+  const getPostImage = (p: Post) => {
+    if (p.featured_image && p.featured_image.trim().length > 0) {
+      return p.featured_image;
+    }
+    return '/logo.png';
+  };
 
   return (
     <div className="main-layout">
@@ -89,7 +101,7 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
               स्वागत है TANJNAMA पर!
             </h2>
             <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '20px' }}>
-              अभी कोई नया लेख प्रकाशित नहीं हुआ है। नए लेख पढ़ने के लिए शीघ्र ही पुनः पधारें या एडमिन पैनल ([/admin](https://www.tanjnama.com/admin)) से पहली खबर प्रकाशित करें।
+              अभी कोई नया लेख प्रकाशित नहीं हुआ है। एडमिन पैनल से अपनी पहली खबर प्रकाशित करें।
             </p>
             <Link href="/admin" className="btn-primary" style={{ display: 'inline-block' }}>
               🔑 एडमिन लॉगिन (कंटेंट पोर्टल)
@@ -101,13 +113,16 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
             {heroPost && (
               <div className="hero-grid">
                 <Link href={`/posts/${heroPost.slug}`} className="main-lead-card">
-                  <div className="lead-image-box">
+                  <div className="lead-image-box" style={{ background: '#f8fafc' }}>
                     <img
-                      src={
-                        heroPost.featured_image ||
-                        'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&q=80'
-                      }
+                      src={getPostImage(heroPost)}
                       alt={heroPost.title}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: heroPost.featured_image ? 'cover' : 'contain',
+                        padding: heroPost.featured_image ? '0' : '20px'
+                      }}
                     />
                     <span className="cat-badge">{heroPost.category}</span>
                   </div>
@@ -130,13 +145,16 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
                     </div>
                     {hotPosts.map((p) => (
                       <Link href={`/posts/${p.slug}`} className="hot-story-item" key={p.id || p.slug}>
-                        <div className="hot-story-thumb">
+                        <div className="hot-story-thumb" style={{ background: '#f8fafc' }}>
                           <img
-                            src={
-                              p.featured_image ||
-                              'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=400&q=80'
-                            }
+                            src={getPostImage(p)}
                             alt={p.title}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: p.featured_image ? 'cover' : 'contain',
+                              padding: p.featured_image ? '0' : '8px'
+                            }}
                           />
                         </div>
                         <div className="hot-story-info">
@@ -187,13 +205,16 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
             <div className="posts-grid">
               {mainPosts.map((p) => (
                 <Link href={`/posts/${p.slug}`} className="post-card" key={p.id || p.slug}>
-                  <div className="post-card-image">
+                  <div className="post-card-image" style={{ background: '#f8fafc' }}>
                     <img
-                      src={
-                        p.featured_image ||
-                        'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80'
-                      }
+                      src={getPostImage(p)}
                       alt={p.title}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: p.featured_image ? 'cover' : 'contain',
+                        padding: p.featured_image ? '0' : '16px'
+                      }}
                     />
                     <span className="cat-badge">{p.category}</span>
                   </div>

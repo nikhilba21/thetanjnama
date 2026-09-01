@@ -148,12 +148,16 @@ export default function CategoryPageFeed({
                   {(p.featured_image || p.video_url) && (
                     <Link href={`/posts/${p.slug}`} style={{ flexShrink: 0, width: '220px', position: 'relative' }}>
                       <img
-                        src={
-                          p.featured_image ||
-                          'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=400&q=80'
-                        }
+                        src={p.featured_image && p.featured_image.trim().length > 0 ? p.featured_image : '/logo.png'}
                         alt={p.title}
-                        style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '6px' }}
+                        style={{
+                          width: '100%',
+                          height: '140px',
+                          objectFit: p.featured_image ? 'cover' : 'contain',
+                          background: '#f8fafc',
+                          padding: p.featured_image ? '0' : '12px',
+                          borderRadius: '6px'
+                        }}
                       />
                       {p.video_url && (
                         <div

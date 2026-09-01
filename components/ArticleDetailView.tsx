@@ -168,11 +168,15 @@ export default function ArticleDetailView({ initialPost, slug, allPosts }: Artic
             <Link href={`/posts/${rp.slug}`} className="post-card" key={rp.id}>
               <div className="post-card-image" style={{ height: '130px' }}>
                 <img
-                  src={
-                    rp.featured_image ||
-                    'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=400&q=80'
-                  }
+                  src={rp.featured_image && rp.featured_image.trim().length > 0 ? rp.featured_image : '/logo.png'}
                   alt={rp.title}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: rp.featured_image ? 'cover' : 'contain',
+                    background: '#f8fafc',
+                    padding: rp.featured_image ? '0' : '10px'
+                  }}
                 />
               </div>
               <div className="post-card-content" style={{ padding: '12px' }}>

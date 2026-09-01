@@ -28,13 +28,17 @@ export default async function SearchPage({
             {results.map((p) => (
               <Link href={`/posts/${p.slug}`} className="post-card" key={p.id}>
                 <div className="post-card-image">
-                  <img
-                    src={
-                      p.featured_image ||
-                      'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&q=80'
-                    }
-                    alt={p.title}
-                  />
+                    <img
+                      src={p.featured_image && p.featured_image.trim().length > 0 ? p.featured_image : '/logo.png'}
+                      alt={p.title}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: p.featured_image ? 'cover' : 'contain',
+                        background: '#f8fafc',
+                        padding: p.featured_image ? '0' : '10px'
+                      }}
+                    />
                   <span className="cat-badge">{p.category}</span>
                 </div>
                 <div className="post-card-content">
