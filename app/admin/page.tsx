@@ -424,6 +424,36 @@ export default function AdminPage() {
     } catch (e) {}
   };
 
+  const handleSyncLocalToCloud = async () => {
+    try {
+      const localStr = localStorage.getItem('tanjnama_local_articles');
+      if (!localStr) {
+        alert('ब्राउज़र में कोई स्थानीय लेख नहीं मिला।');
+        return;
+      }
+      const localPosts: Post[] = JSON.parse(localStr);
+      if (localPosts.length === 0) {
+        alert('कोई स्थानीय लेख नहीं मिला।');
+        return;
+      }
+
+      setStatusMsg(`⏳ ${localPosts.length} लेख सर्वर व क्लाउड डेटाबेस में सिंक किए जा रहे हैं...`);
+      let count = 0;
+      for (const lp of localPosts) {
+        const res = await fetch('/api/posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(lp)
+        });
+        if (res.ok) count++;
+      }
+      setStatusMsg(`✅ ${count} लेख सफलतापूर्वक क्लाउड डेटाबेस व लाइव वेबसाइट पर सिंक हो गए!`);
+      await loadPosts();
+    } catch (e) {
+      alert('सिंक करने में त्रुटि आई।');
+    }
+  };
+
   // LOAD TICKERS & STATUS
   async function loadTickers() {
     try {
@@ -1752,7 +1782,14 @@ export default function AdminPage() {
           <div style={{ background: '#ffffff', padding: '30px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h2 style={{ fontSize: '20px', color: '#0f172a' }}>📚 लेख सूची एवं प्रबंधन</h2>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  onClick={handleSyncLocalToCloud}
+                  style={{ padding: '6px 14px', fontSize: '12px', borderRadius: '4px', border: 'none', cursor: 'pointer', background: '#166534', color: '#fff', fontWeight: 700 }}
+                  title="लोकल ब्राउज़र के लेखों को लाइव क्लाउड डेटाबेस में सेव करें"
+                >
+                  🚀 सर्वर सिंक करें (Sync to Live)
+                </button>
                 <button
                   onClick={() => setFilterStatus('all')}
                   style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '4px', border: 'none', cursor: 'pointer', background: filterStatus === 'all' ? 'var(--primary)' : '#e2e8f0', color: filterStatus === 'all' ? '#fff' : '#334155' }}
