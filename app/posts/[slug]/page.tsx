@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import { getPost, getPublishedPosts } from '@/lib/db';
 import ArticleDetailView from '@/components/ArticleDetailView';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function generateMetadata({
   params
 }: {
