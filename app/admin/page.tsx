@@ -604,9 +604,10 @@ export default function AdminPage() {
       if (res.ok) {
         const savedPost = await res.json();
         saveLocalPostBackup(savedPost);
-        setStatusMsg(editingId ? '✅ लेख सफलतापूर्वक अपडेट हुआ!' : '🚀 नया लेख सफलतापूर्वक प्रकाशित हुआ!');
+        setStatusMsg(editingId ? '✅ लेख सफलतापूर्वक सर्वर व लाइव वेबसाइट पर अपडेट हुआ!' : '🚀 नया लेख सर्वर व लाइव वेबसाइट पर प्रकाशित हुआ!');
       } else {
-        setStatusMsg('✅ लेख ब्राउज़र डेटाबेस में सहेजा गया!');
+        const errJson = await res.json().catch(() => ({}));
+        setStatusMsg(`⚠️ सर्वर सेव सूचना: ${errJson.error || 'ब्राउज़र में सहेजा गया'}`);
       }
     } catch (e) {
       setStatusMsg('✅ लेख सहेजा गया!');

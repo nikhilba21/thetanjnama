@@ -46,29 +46,24 @@ async function request(path: string, init: RequestInit = {}) {
   const { base, key } = getSupabaseCredentials();
   if (!base || !key) return null;
 
-  try {
-    const res = await fetch(`${base}/rest/v1/${path}`, {
-      ...init,
-      headers: {
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=representation',
-        ...(init.headers || {})
-      },
-      cache: 'no-store'
-    });
+  const res = await fetch(`${base}/rest/v1/${path}`, {
+    ...init,
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+      ...(init.headers || {})
+    },
+    cache: 'no-store'
+  });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.warn(`Supabase REST Error [${res.status}]: ${errText}`);
-      return null;
-    }
-    return res.json();
-  } catch (e) {
-    console.warn('Supabase fetch exception:', e);
-    return null;
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error(`Supabase REST Error [${res.status}]:`, errText);
+    throw new Error(`Supabase REST [${res.status}]: ${errText}`);
   }
+  return res.json();
 }
 
 export async function getPublishedPosts(limit = 50): Promise<Post[]> {
@@ -141,17 +136,32 @@ export async function createPost(data: Partial<Post>): Promise<Post> {
     updated_at: new Date().toISOString()
   };
 
+  // Try 1: Full payload
   try {
     const res = await request('posts', {
       method: 'POST',
       body: JSON.stringify(newPost)
     });
     if (res && Array.isArray(res) && res[0]) return res[0];
-  } catch (e) {
-    console.warn('Supabase createPost failed, storing in memory:', e);
+  } catch (e: any) {
+    console.warn('Supabase createPost full payload warning:', e.message);
+
+    // Try 2: If video_url column is missing in Supabase schema, retry without video_url
+    if (e.message && e.message.includes('video_url')) {
+      try {
+        const { video_url, ...withoutVideo } = newPost;
+        const res2 = await request('posts', {
+          method: 'POST',
+          body: JSON.stringify(withoutVideo)
+        });
+        if (res2 && Array.isArray(res2) && res2[0]) return { ...res2[0], video_url };
+      } catch (err2) {
+        console.warn('Supabase retry without video_url failed:', err2);
+      }
+    }
   }
 
-  // Deduplicate in memory
+  // Fallback to memory
   const idx = inMemoryPosts.findIndex((p) => p.id === newPost.id || p.slug === newPost.slug);
   if (idx !== -1) {
     inMemoryPosts[idx] = newPost;
@@ -175,8 +185,18 @@ export async function updatePost(id: string, data: Partial<Post>): Promise<Post 
       body: JSON.stringify(updatePayload)
     });
     if (res && Array.isArray(res) && res[0]) return res[0];
-  } catch (e) {
-    console.warn('Supabase updatePost failed, updating memory:', e);
+  } catch (e: any) {
+    console.warn('Supabase updatePost warning:', e.message);
+    if (e.message && e.message.includes('video_url')) {
+      try {
+        const { video_url, ...withoutVideo } = updatePayload;
+        const res2 = await request(`posts?id=eq.${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          body: JSON.stringify(withoutVideo)
+        });
+        if (res2 && Array.isArray(res2) && res2[0]) return res2[0];
+      } catch (err2) {}
+    }
   }
 
   const idx = inMemoryPosts.findIndex((p) => p.id === id);
