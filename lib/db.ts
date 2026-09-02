@@ -27,6 +27,11 @@ export type TickerItem = {
 let inMemoryPosts: Post[] = [];
 let inMemoryTicker: TickerItem[] = [];
 
+function isUuid(str?: string): boolean {
+  if (!str) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+}
+
 function getSupabaseCredentials() {
   const base =
     process.env.TANJNAMA_SUPABASE_URL ||
@@ -136,25 +141,32 @@ export async function createPost(data: Partial<Post>): Promise<Post> {
     updated_at: new Date().toISOString()
   };
 
+  // Prepare payload for Supabase REST API
+  // Omit custom non-UUID string IDs so Supabase PostgreSQL auto-generates valid UUIDs
+  const supabasePayload = { ...newPost };
+  if (!isUuid(supabasePayload.id)) {
+    delete (supabasePayload as any).id;
+  }
+
   // Try 1: Full payload
   try {
     const res = await request('posts', {
       method: 'POST',
-      body: JSON.stringify(newPost)
+      body: JSON.stringify(supabasePayload)
     });
     if (res && Array.isArray(res) && res[0]) return res[0];
   } catch (e: any) {
-    console.warn('Supabase createPost full payload warning:', e.message);
+    console.warn('Supabase createPost warning:', e.message);
 
     // Try 2: If video_url column is missing in Supabase schema, retry without video_url
     if (e.message && e.message.includes('video_url')) {
       try {
-        const { video_url, ...withoutVideo } = newPost;
+        const { video_url, ...withoutVideo } = supabasePayload;
         const res2 = await request('posts', {
           method: 'POST',
           body: JSON.stringify(withoutVideo)
         });
-        if (res2 && Array.isArray(res2) && res2[0]) return { ...res2[0], video_url };
+        if (res2 && Array.isArray(res2) && res2[0]) return { ...res2[0], video_url: newPost.video_url };
       } catch (err2) {
         console.warn('Supabase retry without video_url failed:', err2);
       }
@@ -180,26 +192,17 @@ export async function updatePost(id: string, data: Partial<Post>): Promise<Post 
   };
 
   try {
-    const res = await request(`posts?id=eq.${encodeURIComponent(id)}`, {
+    const filterQuery = isUuid(id) ? `id=eq.${encodeURIComponent(id)}` : `slug=eq.${encodeURIComponent(data.slug || id)}`;
+    const res = await request(`posts?${filterQuery}`, {
       method: 'PATCH',
       body: JSON.stringify(updatePayload)
     });
     if (res && Array.isArray(res) && res[0]) return res[0];
   } catch (e: any) {
     console.warn('Supabase updatePost warning:', e.message);
-    if (e.message && e.message.includes('video_url')) {
-      try {
-        const { video_url, ...withoutVideo } = updatePayload;
-        const res2 = await request(`posts?id=eq.${encodeURIComponent(id)}`, {
-          method: 'PATCH',
-          body: JSON.stringify(withoutVideo)
-        });
-        if (res2 && Array.isArray(res2) && res2[0]) return res2[0];
-      } catch (err2) {}
-    }
   }
 
-  const idx = inMemoryPosts.findIndex((p) => p.id === id);
+  const idx = inMemoryPosts.findIndex((p) => p.id === id || p.slug === data.slug);
   if (idx !== -1) {
     inMemoryPosts[idx] = { ...inMemoryPosts[idx], ...updatePayload };
     return inMemoryPosts[idx];
@@ -209,14 +212,15 @@ export async function updatePost(id: string, data: Partial<Post>): Promise<Post 
 
 export async function deletePost(id: string): Promise<boolean> {
   try {
-    await request(`posts?id=eq.${encodeURIComponent(id)}`, {
+    const filterQuery = isUuid(id) ? `id=eq.${encodeURIComponent(id)}` : `slug=eq.${encodeURIComponent(id)}`;
+    await request(`posts?${filterQuery}`, {
       method: 'DELETE'
     });
   } catch (e) {
     console.warn('Supabase deletePost failed');
   }
 
-  inMemoryPosts = inMemoryPosts.filter((p) => p.id !== id);
+  inMemoryPosts = inMemoryPosts.filter((p) => p.id !== id && p.slug !== id);
   return true;
 }
 
@@ -251,9 +255,10 @@ export async function createTickerUpdate(text: string): Promise<TickerItem> {
   };
 
   try {
+    const payload = { text: text.trim(), created_at: newItem.created_at };
     const res = await request('ticker_updates', {
       method: 'POST',
-      body: JSON.stringify(newItem)
+      body: JSON.stringify(payload)
     });
     if (res && Array.isArray(res) && res[0]) return res[0];
   } catch (e) {
@@ -266,7 +271,8 @@ export async function createTickerUpdate(text: string): Promise<TickerItem> {
 
 export async function deleteTickerUpdate(id: string): Promise<boolean> {
   try {
-    await request(`ticker_updates?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+    const filterQuery = isUuid(id) ? `id=eq.${encodeURIComponent(id)}` : `id=eq.${encodeURIComponent(id)}`;
+    await request(`ticker_updates?${filterQuery}`, { method: 'DELETE' });
   } catch (e) {
     console.warn('Supabase ticker delete failed:', e);
   }
