@@ -4,7 +4,7 @@ import Link from 'next/link';
 import AdSense from '@/components/AdSense';
 import VideoPlayer from '@/components/VideoPlayer';
 
-type Post = {
+export type Post = {
   id: string;
   title: string;
   slug: string;
@@ -28,25 +28,23 @@ export default function ArticleDetailView({ initialPost, slug, allPosts }: Artic
   const [post, setPost] = useState<Post | null>(initialPost);
 
   useEffect(() => {
-    if (!initialPost) {
-      try {
-        const localStr = localStorage.getItem('tanjnama_local_articles');
-        if (localStr) {
-          const localList: Post[] = JSON.parse(localStr);
-          const found = localList.find((p) => p.slug === slug);
-          if (found) {
-            setPost(found);
-          }
+    try {
+      const localStr = localStorage.getItem('tanjnama_local_articles');
+      if (localStr) {
+        const localArticles: Post[] = JSON.parse(localStr);
+        const match = localArticles.find((p) => p.slug === slug || p.id === slug);
+        if (match) {
+          setPost(match);
         }
-      } catch (e) {
-        console.warn('LocalStorage post search error');
       }
+    } catch (e) {
+      console.warn('LocalStorage load notice on article page');
     }
-  }, [initialPost, slug]);
+  }, [slug]);
 
   if (!post) {
     return (
-      <div style={{ background: '#ffffff', padding: '60px 20px', textAlign: 'center', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+      <div className="card" style={{ padding: '60px 20px', textAlign: 'center', margin: '40px auto', maxWidth: '600px' }}>
         <h2 style={{ fontSize: '22px', color: '#0f172a', marginBottom: '10px' }}>404 — लेख नहीं मिला</h2>
         <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '20px' }}>यह लेख उपलब्ध नहीं है या हटा दिया गया है।</p>
         <Link href="/" className="btn-primary">🏠 मुख्य पृष्ठ पर लौटें</Link>
@@ -55,9 +53,18 @@ export default function ArticleDetailView({ initialPost, slug, allPosts }: Artic
   }
 
   const relatedPosts = allPosts.filter((item) => item.slug !== post.slug).slice(0, 3);
-  const wordCount = post.content.split(/\s+/).length;
+  const wordCount = (post.content || '').replace(/<[^>]*>/g, '').split(/\s+/).length;
   const readTimeMin = Math.max(1, Math.ceil(wordCount / 180));
   const postUrl = typeof window !== 'undefined' ? window.location.href : `https://www.tanjnama.com/posts/${post.slug}`;
+
+  const getPostImage = (p: Post) => {
+    if (p.featured_image && p.featured_image.trim().length > 0) {
+      return p.featured_image;
+    }
+    return '/logo.png';
+  };
+
+  const isDefaultLogo = !post.featured_image || post.featured_image.trim().length === 0;
 
   return (
     <article className="article-container">
@@ -81,52 +88,35 @@ export default function ArticleDetailView({ initialPost, slug, allPosts }: Artic
       {post.video_url ? (
         <VideoPlayer videoUrl={post.video_url} title={post.title} />
       ) : (
-        post.featured_image && (
-          <img src={post.featured_image} alt={post.title} className="article-featured-img" />
-        )
+        <div style={{ margin: '20px 0', borderRadius: '8px', overflow: 'hidden', background: '#f8fafc', border: '1px solid #cbd5e1', textAlign: 'center' }}>
+          <img
+            src={getPostImage(post)}
+            alt={post.title}
+            style={{
+              width: isDefaultLogo ? 'auto' : '100%',
+              maxWidth: isDefaultLogo ? '260px' : '100%',
+              maxHeight: isDefaultLogo ? '200px' : '550px',
+              height: 'auto',
+              objectFit: isDefaultLogo ? 'contain' : 'cover',
+              padding: isDefaultLogo ? '24px' : '0',
+              margin: '0 auto',
+              display: 'block'
+            }}
+          />
+        </div>
       )}
 
       {/* EXCERPT LEAD */}
-      <p className="article-lead">{post.excerpt}</p>
+      {post.excerpt && <p className="article-lead">{post.excerpt}</p>}
 
       {/* TOP AD PLACEMENT */}
       <AdSense slot="article-top" format="horizontal" />
 
-      {/* ARTICLE CONTENT */}
-      <div className="article-body-text">
-        {post.content.split('\n\n').map((paragraph, index) => {
-          if (paragraph.startsWith('<h2>')) {
-            const cleanHeading = paragraph.replace(/<\/?h2>/g, '');
-            return (
-              <h2 key={index} style={{ fontFamily: 'var(--font-serif)', fontSize: '24px', margin: '28px 0 14px', color: 'var(--dark-bg)' }}>
-                {cleanHeading}
-              </h2>
-            );
-          }
-          if (paragraph.startsWith('<blockquote>')) {
-            const cleanQuote = paragraph.replace(/<\/?blockquote>/g, '');
-            return (
-              <blockquote
-                key={index}
-                style={{
-                  borderLeft: '4px solid var(--primary)',
-                  background: '#fdf2f2',
-                  padding: '16px 20px',
-                  margin: '20px 0',
-                  fontStyle: 'italic',
-                  borderRadius: '0 8px 8px 0'
-                }}
-              >
-                {cleanQuote}
-              </blockquote>
-            );
-          }
-          if (paragraph.includes('<img ')) {
-            return <div key={index} dangerouslySetInnerHTML={{ __html: paragraph }} />;
-          }
-          return <p key={index}>{paragraph}</p>;
-        })}
-      </div>
+      {/* ARTICLE CONTENT (RICH HTML RENDERED SAFELY) */}
+      <div
+        className="article-body-text"
+        dangerouslySetInnerHTML={{ __html: post.content }}
+      />
 
       {/* IN-ARTICLE BOTTOM AD PLACEMENT */}
       <AdSense slot="article-bottom" format="auto" />
@@ -161,31 +151,32 @@ export default function ArticleDetailView({ initialPost, slug, allPosts }: Artic
       </div>
 
       {/* RELATED ARTICLES */}
-      <div style={{ marginTop: '40px' }}>
-        <h3 className="widget-title">📰 सम्बंधित लेख</h3>
-        <div className="posts-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-          {relatedPosts.map((rp) => (
-            <Link href={`/posts/${rp.slug}`} className="post-card" key={rp.id}>
-              <div className="post-card-image" style={{ height: '130px' }}>
-                <img
-                  src={rp.featured_image && rp.featured_image.trim().length > 0 ? rp.featured_image : '/logo.png'}
-                  alt={rp.title}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: rp.featured_image ? 'cover' : 'contain',
-                    background: '#f8fafc',
-                    padding: rp.featured_image ? '0' : '10px'
-                  }}
-                />
-              </div>
-              <div className="post-card-content" style={{ padding: '12px' }}>
-                <h4 style={{ fontSize: '14px', lineHeight: 1.3, marginBottom: '6px' }}>{rp.title}</h4>
-              </div>
-            </Link>
-          ))}
+      {relatedPosts.length > 0 && (
+        <div style={{ marginTop: '40px' }}>
+          <h3 className="widget-title">📰 सम्बंधित लेख</h3>
+          <div className="posts-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            {relatedPosts.map((rp) => (
+              <Link href={`/posts/${rp.slug}`} className="post-card" key={rp.id || rp.slug}>
+                <div className="post-card-image" style={{ height: '130px', background: '#f8fafc' }}>
+                  <img
+                    src={getPostImage(rp)}
+                    alt={rp.title}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: rp.featured_image ? 'cover' : 'contain',
+                      padding: rp.featured_image ? '0' : '10px'
+                    }}
+                  />
+                </div>
+                <div className="post-card-content" style={{ padding: '12px' }}>
+                  <h4 style={{ fontSize: '14px', lineHeight: 1.3, marginBottom: '6px' }}>{rp.title}</h4>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </article>
   );
 }

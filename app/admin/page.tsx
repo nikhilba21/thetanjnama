@@ -550,7 +550,7 @@ export default function AdminPage() {
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        const maxWidth = 900;
+        const maxWidth = 1600;
 
         if (width > maxWidth) {
           height = Math.round((height * maxWidth) / width);
@@ -562,7 +562,7 @@ export default function AdminPage() {
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
 
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
         callback(dataUrl);
       };
       img.src = e.target?.result as string;
