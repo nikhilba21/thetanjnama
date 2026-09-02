@@ -1,8 +1,5 @@
 import { getCategorySlugFromName } from '@/lib/categories';
 
-const base = process.env.TANJNAMA_SUPABASE_URL;
-const key = process.env.TANJNAMA_SUPABASE_SERVICE_ROLE_KEY;
-
 export type Post = {
   id: string;
   title: string;
@@ -27,33 +24,59 @@ export type TickerItem = {
   created_at: string;
 };
 
-const initialFallbackPosts: Post[] = [];
 let inMemoryPosts: Post[] = [];
 let inMemoryTicker: TickerItem[] = [];
 
-async function request(path: string, init: RequestInit = {}) {
-  if (!base || !key) return null;
-  const res = await fetch(`${base}/rest/v1/${path}`, {
-    ...init,
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${key}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation',
-      ...(init.headers || {})
-    },
-    cache: 'no-store'
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+function getSupabaseCredentials() {
+  const base =
+    process.env.TANJNAMA_SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.SUPABASE_URL;
+
+  const key =
+    process.env.TANJNAMA_SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY;
+
+  return { base, key };
 }
 
-export async function getPublishedPosts(limit = 20): Promise<Post[]> {
+async function request(path: string, init: RequestInit = {}) {
+  const { base, key } = getSupabaseCredentials();
+  if (!base || !key) return null;
+
+  try {
+    const res = await fetch(`${base}/rest/v1/${path}`, {
+      ...init,
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+        ...(init.headers || {})
+      },
+      cache: 'no-store'
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.warn(`Supabase REST Error [${res.status}]: ${errText}`);
+      return null;
+    }
+    return res.json();
+  } catch (e) {
+    console.warn('Supabase fetch exception:', e);
+    return null;
+  }
+}
+
+export async function getPublishedPosts(limit = 50): Promise<Post[]> {
   try {
     const live = (await request(`posts?status=eq.published&order=published_at.desc&limit=${limit}`)) as Post[] | null;
-    if (live && live.length > 0) return live;
+    if (live && Array.isArray(live) && live.length > 0) return live;
   } catch (e) {
-    console.warn('Supabase DB fetch failed, using memory:', e);
+    console.warn('Supabase DB fetch failed, using memory fallback');
   }
   return inMemoryPosts.filter((p) => p.status === 'published').slice(0, limit);
 }
@@ -82,9 +105,9 @@ export async function getPostsByCategory(categorySlugOrName: string, limit = 50)
 export async function getPost(slug: string): Promise<Post | null> {
   try {
     const rows = (await request(`posts?slug=eq.${encodeURIComponent(slug)}&status=eq.published&limit=1`)) as Post[] | null;
-    if (rows && rows[0]) return rows[0];
+    if (rows && Array.isArray(rows) && rows[0]) return rows[0];
   } catch (e) {
-    console.warn('Supabase getPost failed, searching memory:', e);
+    console.warn('Supabase getPost failed');
   }
   return inMemoryPosts.find((p) => p.slug === slug && p.status === 'published') || null;
 }
@@ -92,9 +115,9 @@ export async function getPost(slug: string): Promise<Post | null> {
 export async function getAdminPosts(): Promise<Post[]> {
   try {
     const live = (await request('posts?order=created_at.desc')) as Post[] | null;
-    if (live) return live;
+    if (live && Array.isArray(live)) return live;
   } catch (e) {
-    console.warn('Supabase getAdminPosts failed, using memory:', e);
+    console.warn('Supabase getAdminPosts failed, using memory fallback');
   }
   return inMemoryPosts;
 }
@@ -123,12 +146,19 @@ export async function createPost(data: Partial<Post>): Promise<Post> {
       method: 'POST',
       body: JSON.stringify(newPost)
     });
-    if (res && res[0]) return res[0];
+    if (res && Array.isArray(res) && res[0]) return res[0];
   } catch (e) {
     console.warn('Supabase createPost failed, storing in memory:', e);
   }
 
-  inMemoryPosts.unshift(newPost);
+  // Deduplicate in memory
+  const idx = inMemoryPosts.findIndex((p) => p.id === newPost.id || p.slug === newPost.slug);
+  if (idx !== -1) {
+    inMemoryPosts[idx] = newPost;
+  } else {
+    inMemoryPosts.unshift(newPost);
+  }
+
   return newPost;
 }
 
@@ -144,7 +174,7 @@ export async function updatePost(id: string, data: Partial<Post>): Promise<Post 
       method: 'PATCH',
       body: JSON.stringify(updatePayload)
     });
-    if (res && res[0]) return res[0];
+    if (res && Array.isArray(res) && res[0]) return res[0];
   } catch (e) {
     console.warn('Supabase updatePost failed, updating memory:', e);
   }
@@ -162,9 +192,8 @@ export async function deletePost(id: string): Promise<boolean> {
     await request(`posts?id=eq.${encodeURIComponent(id)}`, {
       method: 'DELETE'
     });
-    return true;
   } catch (e) {
-    console.warn('Supabase deletePost failed, removing from memory:', e);
+    console.warn('Supabase deletePost failed');
   }
 
   inMemoryPosts = inMemoryPosts.filter((p) => p.id !== id);
@@ -187,9 +216,9 @@ export async function searchPosts(query: string): Promise<Post[]> {
 export async function getTickerUpdates(): Promise<TickerItem[]> {
   try {
     const live = (await request('ticker_updates?order=created_at.desc')) as TickerItem[] | null;
-    if (live && live.length > 0) return live;
+    if (live && Array.isArray(live) && live.length > 0) return live;
   } catch (e) {
-    console.warn('Supabase ticker fetch failed, using memory:', e);
+    console.warn('Supabase ticker fetch failed, using memory fallback');
   }
   return inMemoryTicker;
 }
@@ -206,7 +235,7 @@ export async function createTickerUpdate(text: string): Promise<TickerItem> {
       method: 'POST',
       body: JSON.stringify(newItem)
     });
-    if (res && res[0]) return res[0];
+    if (res && Array.isArray(res) && res[0]) return res[0];
   } catch (e) {
     console.warn('Supabase ticker save failed:', e);
   }
@@ -218,7 +247,6 @@ export async function createTickerUpdate(text: string): Promise<TickerItem> {
 export async function deleteTickerUpdate(id: string): Promise<boolean> {
   try {
     await request(`ticker_updates?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
-    return true;
   } catch (e) {
     console.warn('Supabase ticker delete failed:', e);
   }
