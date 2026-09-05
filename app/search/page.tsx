@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { searchPosts } from '@/lib/db';
+import { getYouTubeThumbnailUrl } from '@/lib/video';
 
 export default async function SearchPage({
   searchParams
@@ -8,6 +9,22 @@ export default async function SearchPage({
 }) {
   const query = (await searchParams).q || '';
   const results = query ? await searchPosts(query) : [];
+
+  const getPostImage = (p: any) => {
+    if (p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png')) {
+      return p.featured_image;
+    }
+    if (p.video_url && p.video_url.trim().length > 0) {
+      const ytThumb = getYouTubeThumbnailUrl(p.video_url);
+      if (ytThumb) return ytThumb;
+    }
+    return p.featured_image || '/logo.png';
+  };
+
+  const isFullCover = (p: any) => {
+    const img = getPostImage(p);
+    return img !== '/logo.png' && !img.endsWith('/logo.png');
+  };
 
   return (
     <main className="page-container">
@@ -29,14 +46,14 @@ export default async function SearchPage({
               <Link href={`/posts/${p.slug}`} className="post-card" key={p.id}>
                 <div className="post-card-image">
                     <img
-                      src={p.featured_image && p.featured_image.trim().length > 0 ? p.featured_image : '/logo.png'}
+                      src={getPostImage(p)}
                       alt={p.title}
                       style={{
                         width: '100%',
                         height: '100%',
-                        objectFit: p.featured_image ? 'cover' : 'contain',
+                        objectFit: isFullCover(p) ? 'cover' : 'contain',
                         background: '#f8fafc',
-                        padding: p.featured_image ? '0' : '10px'
+                        padding: isFullCover(p) ? '0' : '10px'
                       }}
                     />
                   <span className="cat-badge">{p.category}</span>

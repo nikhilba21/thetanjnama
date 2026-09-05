@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import RichTextEditor from '@/components/RichTextEditor';
 import VideoPlayer from '@/components/VideoPlayer';
+import { getYouTubeThumbnailUrl } from '@/lib/video';
 
 type Post = {
   id?: string;
@@ -464,7 +465,7 @@ export default function AdminPage() {
       content: `<p style="font-size:16px; font-weight:600;">${videoTitle.trim()}</p>\n<p>${videoExcerpt.trim() || videoTitle.trim()}</p>`,
       category: videoCategory.trim() || 'वीडियो समाचार',
       author: videoAuthor.trim() || 'तंजनामा वीडियो डेस्क',
-      featured_image: null,
+      featured_image: getYouTubeThumbnailUrl(videoEmbedCode.trim()) || null,
       video_url: videoEmbedCode.trim(),
       status: 'published',
       published_at: new Date().toISOString(),

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import AajKaSawalWidget from '@/components/AajKaSawalWidget';
 
 import { Post, sortPostsLatestFirst } from '@/lib/db';
+import { getYouTubeThumbnailUrl } from '@/lib/video';
 
 interface CategoryPageFeedProps {
   categorySlug: string;
@@ -17,6 +18,22 @@ export default function CategoryPageFeed({
   initialPosts
 }: CategoryPageFeedProps) {
   const [posts, setPosts] = useState<Post[]>(sortPostsLatestFirst(initialPosts));
+
+  const getPostImage = (p: Post) => {
+    if (p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png')) {
+      return p.featured_image;
+    }
+    if (p.video_url && p.video_url.trim().length > 0) {
+      const ytThumb = getYouTubeThumbnailUrl(p.video_url);
+      if (ytThumb) return ytThumb;
+    }
+    return p.featured_image || '/logo.png';
+  };
+
+  const isFullCover = (p: Post) => {
+    const img = getPostImage(p);
+    return img !== '/logo.png' && !img.endsWith('/logo.png');
+  };
 
   useEffect(() => {
     async function syncCategoryArticles() {
@@ -132,14 +149,14 @@ export default function CategoryPageFeed({
                   {(p.featured_image || p.video_url) && (
                     <Link href={`/posts/${p.slug}`} style={{ flexShrink: 0, width: '220px', position: 'relative' }}>
                       <img
-                        src={p.featured_image && p.featured_image.trim().length > 0 ? p.featured_image : '/logo.png'}
+                        src={getPostImage(p)}
                         alt={p.title}
                         style={{
                           width: '100%',
                           height: '140px',
-                          objectFit: p.featured_image ? 'cover' : 'contain',
+                          objectFit: isFullCover(p) ? 'cover' : 'contain',
                           background: '#f8fafc',
-                          padding: p.featured_image ? '0' : '12px',
+                          padding: isFullCover(p) ? '0' : '12px',
                           borderRadius: '6px'
                         }}
                       />

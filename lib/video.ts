@@ -40,3 +40,9 @@ export function getYouTubeEmbedUrl(input: string): string | null {
   return id ? `https://www.youtube-nocookie.com/embed/${id}?autoplay=0&rel=0` : null;
 }
 
+export function getYouTubeThumbnailUrl(input: string): string | null {
+  const id = extractYouTubeVideoId(input);
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
+}
+
+

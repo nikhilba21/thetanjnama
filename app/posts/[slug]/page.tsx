@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { getPost, getPublishedPosts } from '@/lib/db';
 import ArticleDetailView from '@/components/ArticleDetailView';
+import { getYouTubeThumbnailUrl } from '@/lib/video';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -15,7 +16,11 @@ export async function generateMetadata({
   if (!p) return { title: 'लेख | TANJNAMA' };
 
   const pageUrl = `https://www.tanjnama.com/posts/${p.slug}`;
-  const imageUrl = p.featured_image || 'https://www.tanjnama.com/logo.png';
+  const ytThumb = p.video_url ? getYouTubeThumbnailUrl(p.video_url) : null;
+  const imageUrl =
+    p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png')
+      ? p.featured_image
+      : (ytThumb || p.featured_image || 'https://www.tanjnama.com/logo.png');
 
   return {
     title: p.seo_title || `${p.title} | TANJNAMA`,

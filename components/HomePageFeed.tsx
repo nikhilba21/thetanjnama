@@ -6,6 +6,7 @@ import { CATEGORY_LIST } from '@/lib/categories';
 import AajKaSawalWidget from '@/components/AajKaSawalWidget';
 
 import { Post, sortPostsLatestFirst } from '@/lib/db';
+import { getYouTubeThumbnailUrl } from '@/lib/video';
 
 interface HomePageFeedProps {
   initialPosts: Post[];
@@ -62,10 +63,19 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
   const mainPosts = posts.slice(4);
 
   const getPostImage = (p: Post) => {
-    if (p.featured_image && p.featured_image.trim().length > 0) {
+    if (p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png')) {
       return p.featured_image;
     }
-    return '/logo.png';
+    if (p.video_url && p.video_url.trim().length > 0) {
+      const ytThumb = getYouTubeThumbnailUrl(p.video_url);
+      if (ytThumb) return ytThumb;
+    }
+    return p.featured_image || '/logo.png';
+  };
+
+  const isFullCover = (p: Post) => {
+    const img = getPostImage(p);
+    return img !== '/logo.png' && !img.endsWith('/logo.png');
   };
 
   return (
@@ -105,8 +115,8 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
                       style={{
                         width: '100%',
                         height: '100%',
-                        objectFit: heroPost.featured_image ? 'cover' : 'contain',
-                        padding: heroPost.featured_image ? '0' : '20px'
+                        objectFit: isFullCover(heroPost) ? 'cover' : 'contain',
+                        padding: isFullCover(heroPost) ? '0' : '20px'
                       }}
                     />
                     <span className="cat-badge">{heroPost.category}</span>
@@ -137,8 +147,8 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
                             style={{
                               width: '100%',
                               height: '100%',
-                              objectFit: p.featured_image ? 'cover' : 'contain',
-                              padding: p.featured_image ? '0' : '8px'
+                              objectFit: isFullCover(p) ? 'cover' : 'contain',
+                              padding: isFullCover(p) ? '0' : '8px'
                             }}
                           />
                         </div>
@@ -197,8 +207,8 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
                       style={{
                         width: '100%',
                         height: '100%',
-                        objectFit: p.featured_image ? 'cover' : 'contain',
-                        padding: p.featured_image ? '0' : '16px'
+                        objectFit: isFullCover(p) ? 'cover' : 'contain',
+                        padding: isFullCover(p) ? '0' : '16px'
                       }}
                     />
                     <span className="cat-badge">{p.category}</span>

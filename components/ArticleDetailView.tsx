@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AdSense from '@/components/AdSense';
 import VideoPlayer from '@/components/VideoPlayer';
+import { getYouTubeThumbnailUrl } from '@/lib/video';
 
 export type Post = {
   id: string;
@@ -58,13 +59,22 @@ export default function ArticleDetailView({ initialPost, slug, allPosts }: Artic
   const postUrl = typeof window !== 'undefined' ? window.location.href : `https://www.tanjnama.com/posts/${post.slug}`;
 
   const getPostImage = (p: Post) => {
-    if (p.featured_image && p.featured_image.trim().length > 0) {
+    if (p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png')) {
       return p.featured_image;
     }
-    return '/logo.png';
+    if (p.video_url && p.video_url.trim().length > 0) {
+      const ytThumb = getYouTubeThumbnailUrl(p.video_url);
+      if (ytThumb) return ytThumb;
+    }
+    return p.featured_image || '/logo.png';
   };
 
-  const isDefaultLogo = !post.featured_image || post.featured_image.trim().length === 0;
+  const isFullCover = (p: Post) => {
+    const img = getPostImage(p);
+    return img !== '/logo.png' && !img.endsWith('/logo.png');
+  };
+
+  const isDefaultLogo = !isFullCover(post);
 
   return (
     <article className="article-container">
@@ -164,8 +174,8 @@ export default function ArticleDetailView({ initialPost, slug, allPosts }: Artic
                     style={{
                       width: '100%',
                       height: '100%',
-                      objectFit: rp.featured_image ? 'cover' : 'contain',
-                      padding: rp.featured_image ? '0' : '10px'
+                      objectFit: isFullCover(rp) ? 'cover' : 'contain',
+                      padding: isFullCover(rp) ? '0' : '10px'
                     }}
                   />
                 </div>
