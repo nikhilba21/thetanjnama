@@ -80,11 +80,9 @@ export function sortPostsLatestFirst<T extends { published_at?: string | null; c
   });
 }
 
-const SUMMARY_COLUMNS = 'id,title,slug,excerpt,category,author,featured_image,video_url,status,seo_title,seo_description,published_at,created_at,updated_at';
-
-export async function getPublishedPosts(limit = 30): Promise<Post[]> {
+export async function getPublishedPosts(limit = 50): Promise<Post[]> {
   try {
-    const live = (await request(`posts?select=${SUMMARY_COLUMNS}&status=eq.published&order=published_at.desc&limit=${limit}`)) as Post[] | null;
+    const live = (await request(`posts?status=eq.published&order=published_at.desc&limit=${limit}`)) as Post[] | null;
     if (live && Array.isArray(live) && live.length > 0) {
       return sortPostsLatestFirst(live.map((p) => ({ ...p, content: '' }))).slice(0, limit);
     }
@@ -94,7 +92,7 @@ export async function getPublishedPosts(limit = 30): Promise<Post[]> {
   return sortPostsLatestFirst(inMemoryPosts.filter((p) => p.status === 'published')).map((p) => ({ ...p, content: '' })).slice(0, limit);
 }
 
-export async function getPostsByCategory(categorySlugOrName: string, limit = 30): Promise<Post[]> {
+export async function getPostsByCategory(categorySlugOrName: string, limit = 50): Promise<Post[]> {
   const all = await getPublishedPosts(limit);
   const target = decodeURIComponent(categorySlugOrName).toLowerCase().trim();
   const isVideoCategory =
@@ -136,9 +134,9 @@ export async function getPost(slug: string): Promise<Post | null> {
 
 export async function getAdminPosts(): Promise<Post[]> {
   try {
-    const live = (await request(`posts?select=${SUMMARY_COLUMNS}&order=created_at.desc`)) as Post[] | null;
+    const live = (await request('posts?order=created_at.desc')) as Post[] | null;
     if (live && Array.isArray(live)) {
-      return sortPostsLatestFirst(live.map((p) => ({ ...p, content: p.content || '' })));
+      return sortPostsLatestFirst(live);
     }
   } catch (e) {
     console.warn('Supabase getAdminPosts failed, using memory fallback');
