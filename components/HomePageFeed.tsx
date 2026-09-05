@@ -4,6 +4,7 @@ import Link from 'next/link';
 import AdSense from '@/components/AdSense';
 import { CATEGORY_LIST } from '@/lib/categories';
 import AajKaSawalWidget from '@/components/AajKaSawalWidget';
+import VideoPlayer from '@/components/VideoPlayer';
 
 import { Post, sortPostsLatestFirst } from '@/lib/db';
 import { getYouTubeThumbnailUrl } from '@/lib/video';
@@ -14,6 +15,7 @@ interface HomePageFeedProps {
 
 export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
   const [posts, setPosts] = useState<Post[]>(sortPostsLatestFirst(initialPosts));
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadAllHomePosts() {
@@ -62,6 +64,8 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
   const hotPosts = posts.slice(1, 4);
   const mainPosts = posts.slice(4);
 
+  const homeVideoPosts = posts.filter((p) => Boolean(p.video_url && p.video_url.trim().length > 0));
+
   const getPostImage = (p: Post) => {
     if (p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png')) {
       return p.featured_image;
@@ -107,30 +111,87 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
             {/* HERO SECTION */}
             {heroPost && (
               <div className="hero-grid">
-                <Link href={`/posts/${heroPost.slug}`} className="main-lead-card">
-                  <div className="lead-image-box" style={{ background: '#f8fafc' }}>
-                    <img
-                      src={getPostImage(heroPost)}
-                      alt={heroPost.title}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: isFullCover(heroPost) ? 'cover' : 'contain',
-                        padding: isFullCover(heroPost) ? '0' : '20px'
-                      }}
-                    />
-                    <span className="cat-badge">{heroPost.category}</span>
+                <div className="main-lead-card">
+                  <div className="lead-image-box" style={{ background: '#000000', position: 'relative' }}>
+                    {heroPost.video_url && playingVideoId === (heroPost.id || heroPost.slug) ? (
+                      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                        <VideoPlayer videoUrl={heroPost.video_url} title={heroPost.title} autoPlay={true} />
+                        <button
+                          onClick={() => setPlayingVideoId(null)}
+                          style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.85)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', zIndex: 20 }}
+                        >
+                          ✕ वीडियो बंद करें
+                        </button>
+                      </div>
+                    ) : (
+                      <Link href={`/posts/${heroPost.slug}`} style={{ display: 'block', width: '100%', height: '100%', position: 'relative' }}>
+                        <img
+                          src={getPostImage(heroPost)}
+                          alt={heroPost.title}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: isFullCover(heroPost) ? 'cover' : 'contain',
+                            padding: isFullCover(heroPost) ? '0' : '20px'
+                          }}
+                        />
+                        {heroPost.video_url && (
+                          <div
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setPlayingVideoId(heroPost.id || heroPost.slug);
+                            }}
+                            style={{
+                              position: 'absolute',
+                              top: '50%',
+                              left: '50%',
+                              transform: 'translate(-50%, -50%)',
+                              background: 'rgba(211, 16, 24, 0.95)',
+                              color: '#fff',
+                              width: '60px',
+                              height: '60px',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '24px',
+                              boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
+                              cursor: 'pointer'
+                            }}
+                            title="होमपेज पर वीडियो प्ले करें"
+                          >
+                            ▶
+                          </div>
+                        )}
+                        <span className="cat-badge">{heroPost.category}</span>
+                      </Link>
+                    )}
                   </div>
                   <div className="lead-content">
-                    <h1>{heroPost.title}</h1>
+                    <h1>
+                      <Link href={`/posts/${heroPost.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                        {heroPost.title}
+                      </Link>
+                    </h1>
                     <p>{heroPost.excerpt}</p>
-                    <div className="post-meta-line">
-                      <span>✍️ {heroPost.author}</span>
-                      <span>•</span>
-                      <span>📅 {new Date(heroPost.published_at || Date.now()).toLocaleDateString('hi-IN')}</span>
+                    <div className="post-meta-line" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span>✍️ {heroPost.author}</span>
+                        <span style={{ margin: '0 6px' }}>•</span>
+                        <span>📅 {new Date(heroPost.published_at || Date.now()).toLocaleDateString('hi-IN')}</span>
+                      </div>
+                      {heroPost.video_url && (
+                        <button
+                          onClick={() => setPlayingVideoId(playingVideoId === (heroPost.id || heroPost.slug) ? null : (heroPost.id || heroPost.slug))}
+                          style={{ background: 'var(--primary)', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 700 }}
+                        >
+                          {playingVideoId === (heroPost.id || heroPost.slug) ? '⏸️ वीडियो बंद करें' : '▶ होमपेज पर प्ले करें'}
+                        </button>
+                      )}
                     </div>
                   </div>
-                </Link>
+                </div>
 
                 {/* HOT STORIES COLUMN */}
                 {hotPosts.length > 0 && (
@@ -139,32 +200,225 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
                       <h2 style={{ fontSize: '18px' }}>🔥 ट्रेंडिंग खबरें</h2>
                     </div>
                     {hotPosts.map((p) => (
-                      <Link href={`/posts/${p.slug}`} className="hot-story-item" key={p.id || p.slug}>
-                        <div className="hot-story-thumb" style={{ background: '#f8fafc' }}>
-                          <img
-                            src={getPostImage(p)}
-                            alt={p.title}
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: isFullCover(p) ? 'cover' : 'contain',
-                              padding: isFullCover(p) ? '0' : '8px'
-                            }}
-                          />
+                      <div className="hot-story-item" key={p.id || p.slug} style={{ display: 'flex', gap: '12px' }}>
+                        <div className="hot-story-thumb" style={{ background: '#f8fafc', position: 'relative' }}>
+                          <Link href={`/posts/${p.slug}`}>
+                            <img
+                              src={getPostImage(p)}
+                              alt={p.title}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: isFullCover(p) ? 'cover' : 'contain',
+                                padding: isFullCover(p) ? '0' : '8px'
+                              }}
+                            />
+                          </Link>
+                          {p.video_url && (
+                            <div
+                              onClick={() => setPlayingVideoId(playingVideoId === (p.id || p.slug) ? null : (p.id || p.slug))}
+                              style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                background: 'rgba(211, 16, 24, 0.9)',
+                                color: '#fff',
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '14px',
+                                cursor: 'pointer'
+                              }}
+                              title="वीडियो देखें"
+                            >
+                              ▶
+                            </div>
+                          )}
                         </div>
                         <div className="hot-story-info">
-                          <h3>{p.title}</h3>
+                          <h3>
+                            <Link href={`/posts/${p.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                              {p.title}
+                            </Link>
+                          </h3>
                           <span style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 700 }}>
                             {p.category}
                           </span>
                         </div>
-                      </Link>
+                      </div>
                     ))}
                   </div>
                 )}
               </div>
             )}
           </>
+        )}
+
+        {/* FEATURED VIDEOS SHOWCASE SECTION (INLINE PLAY ON HOMEPAGE) */}
+        {homeVideoPosts.length > 0 && (
+          <div
+            style={{
+              background: '#0f172a',
+              color: '#ffffff',
+              padding: '24px',
+              borderRadius: '8px',
+              marginBottom: '32px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '24px' }}>🎥</span>
+                <div>
+                  <h2 style={{ fontSize: '20px', color: '#ffffff', margin: 0, fontWeight: 800 }}>
+                    वीडियो बुलेटिन एवं स्पेशल रिपोर्ट (Video Showcase)
+                  </h2>
+                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                    होमपेज पर सीधे प्ले करें या पूरे पेज पर देखें
+                  </span>
+                </div>
+              </div>
+              <Link href="/category/videos" style={{ color: '#ef4444', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}>
+                सभी वीडियो देखें &rarr;
+              </Link>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+              {homeVideoPosts.map((vp) => {
+                const isPlaying = playingVideoId === (vp.id || vp.slug);
+                return (
+                  <div
+                    key={vp.id || vp.slug}
+                    style={{
+                      background: '#1e293b',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      border: '1px solid #334155',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <div style={{ position: 'relative', width: '100%', background: '#000000' }}>
+                      {isPlaying ? (
+                        <div style={{ position: 'relative', width: '100%' }}>
+                          <VideoPlayer videoUrl={vp.video_url} title={vp.title} autoPlay={true} />
+                          <button
+                            onClick={() => setPlayingVideoId(null)}
+                            style={{
+                              position: 'absolute',
+                              top: '8px',
+                              right: '8px',
+                              background: 'rgba(220, 38, 38, 0.9)',
+                              color: '#fff',
+                              border: 'none',
+                              padding: '4px 10px',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              zIndex: 10
+                            }}
+                          >
+                            ✕ बंद करें
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
+                          <img
+                            src={getPostImage(vp)}
+                            alt={vp.title}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                          <div
+                            onClick={() => setPlayingVideoId(vp.id || vp.slug)}
+                            style={{
+                              position: 'absolute',
+                              top: '50%',
+                              left: '50%',
+                              transform: 'translate(-50%, -50%)',
+                              background: 'rgba(211, 16, 24, 0.95)',
+                              color: '#ffffff',
+                              width: '54px',
+                              height: '54px',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '22px',
+                              cursor: 'pointer',
+                              boxShadow: '0 4px 16px rgba(0,0,0,0.5)'
+                            }}
+                            title="होमपेज पर वीडियो प्ले करें"
+                          >
+                            ▶
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ padding: '14px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                      <div>
+                        <h3 style={{ fontSize: '15px', color: '#ffffff', fontWeight: 700, lineHeight: 1.4, marginBottom: '8px' }}>
+                          <Link href={`/posts/${vp.slug}`} style={{ color: '#ffffff', textDecoration: 'none' }}>
+                            {vp.title}
+                          </Link>
+                        </h3>
+                        {vp.excerpt && (
+                          <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.4, marginBottom: '12px' }}>
+                            {vp.excerpt}
+                          </p>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                        <button
+                          onClick={() => setPlayingVideoId(isPlaying ? null : (vp.id || vp.slug))}
+                          style={{
+                            flex: 1,
+                            background: isPlaying ? '#475569' : '#dc2626',
+                            color: '#ffffff',
+                            border: 'none',
+                            padding: '8px',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          {isPlaying ? '⏸️ बंद करें' : '▶ होमपेज पर प्ले करें'}
+                        </button>
+                        <Link
+                          href={`/posts/${vp.slug}`}
+                          style={{
+                            background: '#334155',
+                            color: '#ffffff',
+                            padding: '8px 12px',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            textDecoration: 'none',
+                            display: 'inline-flex',
+                            alignItems: 'center'
+                          }}
+                        >
+                          🔗 पूरा देखें
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         )}
 
         {/* SARCASM SPOTLIGHT BOX */}
@@ -198,32 +452,100 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
             </div>
 
             <div className="posts-grid">
-              {mainPosts.map((p) => (
-                <Link href={`/posts/${p.slug}`} className="post-card" key={p.id || p.slug}>
-                  <div className="post-card-image" style={{ background: '#f8fafc' }}>
-                    <img
-                      src={getPostImage(p)}
-                      alt={p.title}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: isFullCover(p) ? 'cover' : 'contain',
-                        padding: isFullCover(p) ? '0' : '16px'
-                      }}
-                    />
-                    <span className="cat-badge">{p.category}</span>
-                  </div>
-                  <div className="post-card-content">
-                    <h3>{p.title}</h3>
-                    <p>{p.excerpt}</p>
-                    <div className="post-meta-line">
-                      <span>{new Date(p.published_at || Date.now()).toLocaleDateString('hi-IN')}</span>
-                      <span>•</span>
-                      <span>{p.author}</span>
+              {mainPosts.map((p) => {
+                const isPlaying = playingVideoId === (p.id || p.slug);
+                return (
+                  <div className="post-card" key={p.id || p.slug}>
+                    <div className="post-card-image" style={{ background: '#f8fafc', position: 'relative' }}>
+                      {p.video_url && isPlaying ? (
+                        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                          <VideoPlayer videoUrl={p.video_url} title={p.title} autoPlay={true} />
+                          <button
+                            onClick={() => setPlayingVideoId(null)}
+                            style={{
+                              position: 'absolute',
+                              top: '6px',
+                              right: '6px',
+                              background: 'rgba(220,38,38,0.9)',
+                              color: '#fff',
+                              border: 'none',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              cursor: 'pointer',
+                              zIndex: 10
+                            }}
+                          >
+                            ✕ बंद
+                          </button>
+                        </div>
+                      ) : (
+                        <Link href={`/posts/${p.slug}`} style={{ display: 'block', width: '100%', height: '100%', position: 'relative' }}>
+                          <img
+                            src={getPostImage(p)}
+                            alt={p.title}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: isFullCover(p) ? 'cover' : 'contain',
+                              padding: isFullCover(p) ? '0' : '16px'
+                            }}
+                          />
+                          {p.video_url && (
+                            <div
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setPlayingVideoId(p.id || p.slug);
+                              }}
+                              style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                background: 'rgba(211, 16, 24, 0.95)',
+                                color: '#ffffff',
+                                width: '48px',
+                                height: '48px',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '20px',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 14px rgba(0,0,0,0.4)'
+                              }}
+                              title="वीडियो प्ले करें"
+                            >
+                              ▶
+                            </div>
+                          )}
+                          <span className="cat-badge">{p.category}</span>
+                        </Link>
+                      )}
+                    </div>
+                    <div className="post-card-content">
+                      <h3>
+                        <Link href={`/posts/${p.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                          {p.title}
+                        </Link>
+                      </h3>
+                      <p>{p.excerpt}</p>
+                      <div className="post-meta-line" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>{new Date(p.published_at || Date.now()).toLocaleDateString('hi-IN')} • {p.author}</span>
+                        {p.video_url && (
+                          <button
+                            onClick={() => setPlayingVideoId(isPlaying ? null : (p.id || p.slug))}
+                            style={{ background: 'var(--primary)', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}
+                          >
+                            {isPlaying ? '⏸️ बंद' : '▶ प्ले'}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </Link>
-              ))}
+                );
+              })}
             </div>
           </>
         )}

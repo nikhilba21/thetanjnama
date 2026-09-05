@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AajKaSawalWidget from '@/components/AajKaSawalWidget';
+import VideoPlayer from '@/components/VideoPlayer';
 
 import { Post, sortPostsLatestFirst } from '@/lib/db';
 import { getYouTubeThumbnailUrl } from '@/lib/video';
@@ -18,6 +19,7 @@ export default function CategoryPageFeed({
   initialPosts
 }: CategoryPageFeedProps) {
   const [posts, setPosts] = useState<Post[]>(sortPostsLatestFirst(initialPosts));
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   const getPostImage = (p: Post) => {
     if (p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png')) {
@@ -34,6 +36,22 @@ export default function CategoryPageFeed({
     const img = getPostImage(p);
     return img !== '/logo.png' && !img.endsWith('/logo.png');
   };
+
+  const targetSlug = decodeURIComponent(categorySlug).toLowerCase().trim();
+  const targetName = categoryName.toLowerCase().trim();
+  const isVideoCategory =
+    targetSlug === 'videos' ||
+    targetSlug === 'video' ||
+    targetSlug === 'वीडियो' ||
+    targetSlug === 'वीडियो समाचार' ||
+    targetSlug.includes('video') ||
+    targetSlug.includes('वीडियो') ||
+    targetName === 'videos' ||
+    targetName === 'video' ||
+    targetName === 'वीडियो' ||
+    targetName === 'वीडियो समाचार' ||
+    targetName.includes('video') ||
+    targetName.includes('वीडियो');
 
   useEffect(() => {
     async function syncCategoryArticles() {
@@ -70,22 +88,6 @@ export default function CategoryPageFeed({
       }
 
       // 3. Robust category filtering
-      const target = decodeURIComponent(categorySlug).toLowerCase().trim();
-      const targetName = categoryName.toLowerCase().trim();
-      const isVideoCategory =
-        target === 'videos' ||
-        target === 'video' ||
-        target === 'वीडियो' ||
-        target === 'वीडियो समाचार' ||
-        target.includes('video') ||
-        target.includes('वीडियो') ||
-        targetName === 'videos' ||
-        targetName === 'video' ||
-        targetName === 'वीडियो' ||
-        targetName === 'वीडियो समाचार' ||
-        targetName.includes('video') ||
-        targetName.includes('वीडियो');
-
       const filtered = combined.filter((p) => {
         if (!p || !p.title) return false;
         if (p.status === 'draft') return false;
@@ -106,10 +108,10 @@ export default function CategoryPageFeed({
         }
 
         return (
-          cat === target ||
+          cat === targetSlug ||
           cat === targetName ||
-          target.includes(cat) ||
-          (cat.length > 2 && target.includes(cat))
+          targetSlug.includes(cat) ||
+          (cat.length > 2 && targetSlug.includes(cat))
         );
       });
 
@@ -148,7 +150,164 @@ export default function CategoryPageFeed({
                 होमपेज पर वापस जाएं
               </Link>
             </div>
+          ) : isVideoCategory ? (
+            /* FULL THUMBNAIL GRID VIEW FOR VIDEOS CATEGORY */
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '22px' }}>
+              {posts.map((p) => {
+                const isPlaying = playingVideoId === (p.id || p.slug);
+                return (
+                  <div
+                    key={p.id || p.slug}
+                    className="card"
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      overflow: 'hidden',
+                      borderRadius: '8px',
+                      background: '#ffffff',
+                      border: '1px solid #cbd5e1',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+                    }}
+                  >
+                    <div style={{ position: 'relative', width: '100%', background: '#000000' }}>
+                      {p.video_url && isPlaying ? (
+                        <div style={{ position: 'relative', width: '100%' }}>
+                          <VideoPlayer videoUrl={p.video_url} title={p.title} autoPlay={true} />
+                          <button
+                            onClick={() => setPlayingVideoId(null)}
+                            style={{
+                              position: 'absolute',
+                              top: '8px',
+                              right: '8px',
+                              background: 'rgba(220, 38, 38, 0.9)',
+                              color: '#fff',
+                              border: 'none',
+                              padding: '4px 10px',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              zIndex: 10
+                            }}
+                          >
+                            ✕ बंद करें
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
+                          <img
+                            src={getPostImage(p)}
+                            alt={p.title}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover'
+                            }}
+                          />
+                          {p.video_url && (
+                            <div
+                              onClick={() => setPlayingVideoId(p.id || p.slug)}
+                              style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                background: 'rgba(211, 16, 24, 0.95)',
+                                color: '#ffffff',
+                                width: '56px',
+                                height: '56px',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '24px',
+                                cursor: 'pointer',
+                                boxShadow: '0 6px 20px rgba(0,0,0,0.4)'
+                              }}
+                              title="वीडियो प्ले करें"
+                            >
+                              ▶
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '8px' }}>
+                          <span className="card-tag">{p.category}</span>
+                          {p.video_url && (
+                            <span style={{ background: '#dc2626', color: '#fff', fontSize: '10px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px' }}>
+                              ▶ VIDEO
+                            </span>
+                          )}
+                        </div>
+                        <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', lineHeight: 1.4, marginBottom: '8px' }}>
+                          <Link href={`/posts/${p.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                            {p.title}
+                          </Link>
+                        </h3>
+                        {p.excerpt && (
+                          <p style={{ fontSize: '13px', color: '#475569', lineHeight: 1.5, marginBottom: '14px' }}>
+                            {p.excerpt}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '12px' }}>
+                          ✍️ {p.author} • 📅 {p.published_at ? new Date(p.published_at).toLocaleDateString('hi-IN') : 'हाल ही में'}
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          {p.video_url && (
+                            <button
+                              onClick={() => setPlayingVideoId(isPlaying ? null : (p.id || p.slug))}
+                              style={{
+                                flex: 1,
+                                background: isPlaying ? '#475569' : '#dc2626',
+                                color: '#ffffff',
+                                border: 'none',
+                                padding: '8px',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px'
+                              }}
+                            >
+                              {isPlaying ? '⏸️ बंद करें' : '▶ यहाँ प्ले करें'}
+                            </button>
+                          )}
+                          <Link
+                            href={`/posts/${p.slug}`}
+                            style={{
+                              background: '#0f172a',
+                              color: '#ffffff',
+                              padding: '8px 12px',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              textDecoration: 'none',
+                              display: 'inline-flex',
+                              alignItems: 'center'
+                            }}
+                          >
+                            🔗 पूरा देखें
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
+            /* STANDARD LIST VIEW FOR REGULAR CATEGORIES */
             <div className="article-feed-list" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {posts.map((p) => (
                 <article
