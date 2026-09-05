@@ -157,33 +157,47 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <link rel="preconnect" href="https://www.google-analytics.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
 
-        {/* Google Analytics GA4 (gtag.js) - Defer to Lazy Onload */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-S0MSQSWKDM"
-          strategy="lazyOnload"
-        />
-        <Script id="google-analytics" strategy="lazyOnload">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-
-            gtag('config', 'G-S0MSQSWKDM');
-          `}
-        </Script>
-
         {/* Structured Data JSON-LD Script */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
         />
 
-        {/* Google AdSense Script - Optimized Lazy Loading */}
-        <Script
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
-          strategy="lazyOnload"
-          crossOrigin="anonymous"
-        />
+        {/* High Performance Script Loader for Analytics & AdSense */}
+        <Script id="deferred-analytics-ads" strategy="afterInteractive">
+          {`
+            (function() {
+              var loaded = false;
+              function initScripts() {
+                if (loaded) return;
+                loaded = true;
+
+                // GA4
+                var s1 = document.createElement('script');
+                s1.src = 'https://www.googletagmanager.com/gtag/js?id=G-S0MSQSWKDM';
+                s1.async = true;
+                document.head.appendChild(s1);
+
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', 'G-S0MSQSWKDM');
+
+                // AdSense
+                var s2 = document.createElement('script');
+                s2.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}';
+                s2.async = true;
+                s2.crossOrigin = 'anonymous';
+                document.head.appendChild(s2);
+              }
+
+              ['scroll', 'pointerdown', 'touchstart', 'mousemove', 'keydown'].forEach(function(ev) {
+                window.addEventListener(ev, initScripts, { once: true, passive: true });
+              });
+              setTimeout(initScripts, 4000);
+            })();
+          `}
+        </Script>
       </head>
       <body>
         <div id="outer-wrapper">

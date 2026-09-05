@@ -85,6 +85,11 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
     return img !== '/default-cover.webp' && !img.endsWith('/default-cover.webp');
   };
 
+  const [visibleCount, setVisibleCount] = useState(12);
+
+  const displayedMainPosts = mainPosts.slice(0, visibleCount);
+  const hasMore = visibleCount < mainPosts.length;
+
   return (
     <div className="main-layout">
       {/* MAIN NEWS FEED */}
@@ -271,8 +276,6 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
           </>
         )}
 
-
-
         {/* SARCASM SPOTLIGHT BOX */}
         <div
           style={{
@@ -296,15 +299,15 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
         </div>
 
         {/* LATEST POSTS GRID */}
-        {mainPosts.length > 0 && (
+        {displayedMainPosts.length > 0 && (
           <>
             <div className="section-title-box">
               <h2>ताज़ा लेख एवं विश्लेषण</h2>
-              <span style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 700 }}>नवीनतम अपडेट</span>
+              <span style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 700 }}>नवीनतम अपडेट ({posts.length} कुल लेख)</span>
             </div>
 
             <div className="posts-grid">
-              {mainPosts.map((p) => {
+              {displayedMainPosts.map((p) => {
                 const isPlaying = playingVideoId === (p.id || p.slug);
                 return (
                   <div className="post-card" key={p.id || p.slug}>
@@ -390,6 +393,40 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
                       <div className="post-meta-line" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span>{formatDateSafe(p.published_at)} • {p.author}</span>
                         {p.video_url && (
+                          <button
+                            onClick={() => setPlayingVideoId(isPlaying ? null : (p.id || p.slug))}
+                            style={{ background: 'var(--primary)', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}
+                          >
+                            {isPlaying ? '⏸️ बंद' : '▶ प्ले'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {hasMore && (
+              <div style={{ textAlign: 'center', marginTop: '28px', marginBottom: '24px' }}>
+                <button
+                  onClick={() => setVisibleCount((prev) => prev + 12)}
+                  className="btn-primary"
+                  style={{
+                    padding: '12px 32px',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    borderRadius: '6px',
+                    boxShadow: '0 4px 14px rgba(211, 16, 24, 0.3)'
+                  }}
+                >
+                  📥 और खबरें लोड करें ({mainPosts.length - visibleCount} शेष)
+                </button>
+              </div>
+            )}
+          </>
+        )}& (
                           <button
                             onClick={() => setPlayingVideoId(isPlaying ? null : (p.id || p.slug))}
                             style={{ background: 'var(--primary)', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}

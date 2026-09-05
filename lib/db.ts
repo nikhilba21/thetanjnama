@@ -80,16 +80,28 @@ export function sortPostsLatestFirst<T extends { published_at?: string | null; c
   });
 }
 
+export function sanitizePostSummary(p: Post): Post {
+  let img = p.featured_image;
+  if (img && (img.startsWith('data:image') || img.length > 2000)) {
+    img = '/default-cover.webp';
+  }
+  return {
+    ...p,
+    content: '',
+    featured_image: img
+  };
+}
+
 export async function getPublishedPosts(limit = 50): Promise<Post[]> {
   try {
     const live = (await request(`posts?status=eq.published&order=published_at.desc&limit=${limit}`)) as Post[] | null;
     if (live && Array.isArray(live) && live.length > 0) {
-      return sortPostsLatestFirst(live.map((p) => ({ ...p, content: '' }))).slice(0, limit);
+      return sortPostsLatestFirst(live.map(sanitizePostSummary)).slice(0, limit);
     }
   } catch (e) {
     console.warn('Supabase DB fetch failed, using memory fallback');
   }
-  return sortPostsLatestFirst(inMemoryPosts.filter((p) => p.status === 'published')).map((p) => ({ ...p, content: '' })).slice(0, limit);
+  return sortPostsLatestFirst(inMemoryPosts.filter((p) => p.status === 'published')).map(sanitizePostSummary).slice(0, limit);
 }
 
 export async function getPostsByCategory(categorySlugOrName: string, limit = 50): Promise<Post[]> {
