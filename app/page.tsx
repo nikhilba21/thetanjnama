@@ -1,8 +1,7 @@
 import { getPublishedPosts } from '@/lib/db';
 import HomePageFeed from '@/components/HomePageFeed';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 60;
 
 export default async function Home() {
   const posts = await getPublishedPosts(30);

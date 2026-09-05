@@ -18,46 +18,48 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadAllHomePosts() {
-      let merged = [...initialPosts];
+    let merged = [...initialPosts];
 
-      try {
-        const res = await fetch('/api/posts');
-        if (res.ok) {
-          const apiPosts: Post[] = await res.json();
-          apiPosts.forEach((ap) => {
-            if (ap.status === 'published' && !merged.some((m) => m.id === ap.id || m.slug === ap.slug)) {
-              merged.push(ap);
+    try {
+      const localStr = localStorage.getItem('tanjnama_local_articles');
+      if (localStr) {
+        const localArticles: Post[] = JSON.parse(localStr);
+        localArticles.forEach((lp) => {
+          if (lp.status === 'published') {
+            const idx = merged.findIndex((m) => m.id === lp.id || m.slug === lp.slug);
+            if (idx !== -1) {
+              merged[idx] = lp;
+            } else {
+              merged.unshift(lp);
             }
-          });
-        }
-      } catch (e) {
-        console.warn('API fetch notice on home feed');
+          }
+        });
       }
-
-      try {
-        const localStr = localStorage.getItem('tanjnama_local_articles');
-        if (localStr) {
-          const localArticles: Post[] = JSON.parse(localStr);
-          localArticles.forEach((lp) => {
-            if (lp.status === 'published') {
-              const idx = merged.findIndex((m) => m.id === lp.id || m.slug === lp.slug);
-              if (idx !== -1) {
-                merged[idx] = lp;
-              } else {
-                merged.unshift(lp);
-              }
-            }
-          });
-        }
-      } catch (e) {
-        console.warn('LocalStorage load notice on homepage');
-      }
-
-      setPosts(sortPostsLatestFirst(merged));
+    } catch (e) {
+      console.warn('LocalStorage load notice on homepage');
     }
 
-    loadAllHomePosts();
+    setPosts(sortPostsLatestFirst(merged));
+
+    // Async background sync only if initialPosts was sparse
+    if (initialPosts.length < 5) {
+      fetch('/api/posts')
+        .then((res) => (res.ok ? res.json() : []))
+        .then((apiPosts: Post[]) => {
+          if (apiPosts && apiPosts.length > 0) {
+            setPosts((prev) => {
+              const updated = [...prev];
+              apiPosts.forEach((ap) => {
+                if (ap.status === 'published' && !updated.some((m) => m.id === ap.id || m.slug === ap.slug)) {
+                  updated.push(ap);
+                }
+              });
+              return sortPostsLatestFirst(updated);
+            });
+          }
+        })
+        .catch(() => {});
+    }
   }, [initialPosts]);
 
   const heroPost = posts[0];
@@ -128,6 +130,8 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
                         <img
                           src={getPostImage(heroPost)}
                           alt={heroPost.title}
+                          width="800"
+                          height="450"
                           loading="eager"
                           // @ts-ignore
                           fetchpriority="high"
@@ -210,6 +214,10 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
                             <img
                               src={getPostImage(p)}
                               alt={p.title}
+                              width="140"
+                              height="90"
+                              loading="lazy"
+                              decoding="async"
                               style={{
                                 width: '100%',
                                 height: '100%',
@@ -327,6 +335,10 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
                           <img
                             src={getPostImage(p)}
                             alt={p.title}
+                            width="400"
+                            height="225"
+                            loading="lazy"
+                            decoding="async"
                             style={{
                               width: '100%',
                               height: '100%',

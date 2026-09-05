@@ -27,14 +27,16 @@ export default function AdSense({ slot, format = 'auto', style, className }: AdS
     }
   }, [client, adSlot]);
 
+  const defaultMinHeight = format === 'horizontal' ? '90px' : '250px';
+
   return (
-    <div className={`adsense-container ${className || ''}`} style={{ margin: '20px 0', textAlign: 'center' }}>
+    <div className={`adsense-container ${className || ''}`} style={{ margin: '20px 0', textAlign: 'center', minHeight: defaultMinHeight, overflow: 'hidden' }}>
       <span className="ad-label" style={{ display: 'block', fontSize: '10px', color: '#94a3b8', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
         ADVERTISEMENT / विज्ञापन
       </span>
       <ins
         className="adsbygoogle"
-        style={style || { display: 'block', minHeight: '100px', width: '100%' }}
+        style={style || { display: 'block', minHeight: defaultMinHeight, width: '100%' }}
         data-ad-client={client}
         {...(adSlot ? { 'data-ad-slot': adSlot } : {})}
         data-ad-format={format}

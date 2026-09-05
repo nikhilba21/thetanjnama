@@ -3,8 +3,7 @@ import { getPost, getPublishedPosts } from '@/lib/db';
 import ArticleDetailView from '@/components/ArticleDetailView';
 import { getYouTubeThumbnailUrl } from '@/lib/video';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 60;
 
 export async function generateMetadata({
   params

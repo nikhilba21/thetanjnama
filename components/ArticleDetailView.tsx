@@ -102,6 +102,12 @@ export default function ArticleDetailView({ initialPost, slug, allPosts }: Artic
           <img
             src={getPostImage(post)}
             alt={post.title}
+            width="800"
+            height="450"
+            loading="eager"
+            // @ts-ignore
+            fetchpriority="high"
+            decoding="async"
             style={{
               width: isDefaultLogo ? 'auto' : '100%',
               maxWidth: isDefaultLogo ? '260px' : '100%',
@@ -171,6 +177,10 @@ export default function ArticleDetailView({ initialPost, slug, allPosts }: Artic
                   <img
                     src={getPostImage(rp)}
                     alt={rp.title}
+                    width="260"
+                    height="130"
+                    loading="lazy"
+                    decoding="async"
                     style={{
                       width: '100%',
                       height: '100%',

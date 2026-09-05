@@ -54,41 +54,26 @@ export default function CategoryPageFeed({
     targetName.includes('वीडियो');
 
   useEffect(() => {
-    async function syncCategoryArticles() {
-      let combined: Post[] = [...initialPosts];
+    let combined: Post[] = [...initialPosts];
 
-      // 1. Fetch from API endpoint
-      try {
-        const res = await fetch('/api/posts');
-        if (res.ok) {
-          const apiPosts: Post[] = await res.json();
-          apiPosts.forEach((ap) => {
-            if (!combined.some((cp) => cp.id === ap.id || cp.slug === ap.slug)) {
-              combined.unshift(ap);
-            }
-          });
-        }
-      } catch (e) {
-        console.warn('API post sync notice');
+    // 1. Fetch from LocalStorage backup
+    try {
+      const localStr = localStorage.getItem('tanjnama_local_articles');
+      if (localStr) {
+        const localList: Post[] = JSON.parse(localStr);
+        localList.forEach((lp) => {
+          if (!combined.some((cp) => cp.id === lp.id || cp.slug === lp.slug)) {
+            combined.unshift(lp);
+          }
+        });
       }
+    } catch (e) {
+      console.warn('LocalStorage category sync notice');
+    }
 
-      // 2. Fetch from LocalStorage backup
-      try {
-        const localStr = localStorage.getItem('tanjnama_local_articles');
-        if (localStr) {
-          const localList: Post[] = JSON.parse(localStr);
-          localList.forEach((lp) => {
-            if (!combined.some((cp) => cp.id === lp.id || cp.slug === lp.slug)) {
-              combined.unshift(lp);
-            }
-          });
-        }
-      } catch (e) {
-        console.warn('LocalStorage category sync notice');
-      }
-
-      // 3. Robust category filtering
-      const filtered = combined.filter((p) => {
+    // Filter helper
+    const filterFn = (items: Post[]) => {
+      return items.filter((p) => {
         if (!p || !p.title) return false;
         if (p.status === 'draft') return false;
 
@@ -114,11 +99,27 @@ export default function CategoryPageFeed({
           (cat.length > 2 && targetSlug.includes(cat))
         );
       });
+    };
 
-      setPosts(sortPostsLatestFirst(filtered));
+    setPosts(sortPostsLatestFirst(filterFn(combined)));
+
+    // Fetch from API in background if initial dataset is small
+    if (initialPosts.length < 3) {
+      fetch('/api/posts')
+        .then((res) => (res.ok ? res.json() : []))
+        .then((apiPosts: Post[]) => {
+          if (apiPosts && apiPosts.length > 0) {
+            const extraMerged = [...combined];
+            apiPosts.forEach((ap) => {
+              if (!extraMerged.some((cp) => cp.id === ap.id || cp.slug === ap.slug)) {
+                extraMerged.unshift(ap);
+              }
+            });
+            setPosts(sortPostsLatestFirst(filterFn(extraMerged)));
+          }
+        })
+        .catch(() => {});
     }
-
-    syncCategoryArticles();
   }, [categorySlug, categoryName, initialPosts]);
 
   return (
@@ -199,6 +200,10 @@ export default function CategoryPageFeed({
                           <img
                             src={getPostImage(p)}
                             alt={p.title}
+                            width="400"
+                            height="225"
+                            loading="lazy"
+                            decoding="async"
                             style={{
                               width: '100%',
                               height: '100%',
@@ -320,6 +325,10 @@ export default function CategoryPageFeed({
                       <img
                         src={getPostImage(p)}
                         alt={p.title}
+                        width="220"
+                        height="140"
+                        loading="lazy"
+                        decoding="async"
                         style={{
                           width: '100%',
                           height: '140px',
