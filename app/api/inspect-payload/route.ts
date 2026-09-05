@@ -7,10 +7,9 @@ export async function GET() {
     id: p.id,
     title: p.title,
     slug: p.slug,
-    featured_image_length: (p.featured_image || '').length,
-    is_base64: (p.featured_image || '').startsWith('data:'),
-    excerpt_length: (p.excerpt || '').length,
-    content_length: (p.content || '').length
+    featured_image: p.featured_image,
+    video_url: p.video_url || null,
+    excerpt_length: (p.excerpt || '').length
   }));
 
   const totalPayloadSize = JSON.stringify(posts).length;
