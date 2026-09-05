@@ -75,8 +75,16 @@ export default function CategoryPageFeed({
       const isVideoCategory =
         target === 'videos' ||
         target === 'video' ||
+        target === 'वीडियो' ||
+        target === 'वीडियो समाचार' ||
+        target.includes('video') ||
+        target.includes('वीडियो') ||
         targetName === 'videos' ||
-        targetName === 'वीडियो';
+        targetName === 'video' ||
+        targetName === 'वीडियो' ||
+        targetName === 'वीडियो समाचार' ||
+        targetName.includes('video') ||
+        targetName.includes('वीडियो');
 
       const filtered = combined.filter((p) => {
         if (!p || !p.title) return false;
@@ -91,7 +99,9 @@ export default function CategoryPageFeed({
             cat === 'videos' ||
             cat === 'video' ||
             cat === 'वीडियो' ||
-            cat.includes('video')
+            cat === 'वीडियो समाचार' ||
+            cat.includes('video') ||
+            cat.includes('वीडियो')
           );
         }
 

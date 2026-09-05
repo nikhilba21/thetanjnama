@@ -96,7 +96,12 @@ export async function getPostsByCategory(categorySlugOrName: string, limit = 50)
   const all = await getPublishedPosts(limit);
   const target = decodeURIComponent(categorySlugOrName).toLowerCase().trim();
   const isVideoCategory =
-    target === 'videos' || target === 'video' || target === 'वीडियो' || target === 'वीडियो समाचार';
+    target === 'videos' ||
+    target === 'video' ||
+    target === 'वीडियो' ||
+    target === 'वीडियो समाचार' ||
+    target.includes('video') ||
+    target.includes('वीडियो');
 
   const filtered = all.filter((p) => {
     const cat = (p.category || '').toLowerCase().trim();
@@ -106,7 +111,9 @@ export async function getPostsByCategory(categorySlugOrName: string, limit = 50)
         cat === 'videos' ||
         cat === 'video' ||
         cat === 'वीडियो' ||
-        cat.includes('video')
+        cat === 'वीडियो समाचार' ||
+        cat.includes('video') ||
+        cat.includes('वीडियो')
       );
     }
     return cat === target || getCategorySlugFromName(p.category) === target;

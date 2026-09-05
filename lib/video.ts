@@ -35,9 +35,9 @@ export function extractYouTubeVideoId(input: string): string | null {
   return null;
 }
 
-export function getYouTubeEmbedUrl(input: string): string | null {
+export function getYouTubeEmbedUrl(input: string, autoPlay = true): string | null {
   const id = extractYouTubeVideoId(input);
-  return id ? `https://www.youtube-nocookie.com/embed/${id}?autoplay=0&rel=0` : null;
+  return id ? `https://www.youtube-nocookie.com/embed/${id}?autoplay=${autoPlay ? 1 : 0}&mute=0&rel=0` : null;
 }
 
 export function getYouTubeThumbnailUrl(input: string): string | null {

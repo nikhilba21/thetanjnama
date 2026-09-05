@@ -1292,7 +1292,7 @@ export default function AdminPage() {
                     <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#166534', marginBottom: '8px' }}>
                       📺 वीडियो लाइव पूर्वावलोकन (Live Embed Video Preview):
                     </h4>
-                    <VideoPlayer videoUrl={videoEmbedCode} title={videoTitle || 'Preview'} />
+                    <VideoPlayer videoUrl={videoEmbedCode} title={videoTitle || 'Preview'} autoPlay={false} />
                   </div>
                 )}
 
@@ -1373,7 +1373,7 @@ export default function AdminPage() {
                     >
                       <div>
                         <div style={{ marginBottom: '12px' }}>
-                          <VideoPlayer videoUrl={vp.video_url || ''} title={vp.title} />
+                          <VideoPlayer videoUrl={vp.video_url || ''} title={vp.title} autoPlay={false} />
                         </div>
                         <span style={{ fontSize: '11px', fontWeight: 700, background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: '4px', display: 'inline-block', marginBottom: '6px' }}>
                           {vp.category || 'वीडियो समाचार'}
