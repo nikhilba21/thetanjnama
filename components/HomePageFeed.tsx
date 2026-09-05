@@ -128,6 +128,10 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
                         <img
                           src={getPostImage(heroPost)}
                           alt={heroPost.title}
+                          loading="eager"
+                          // @ts-ignore
+                          fetchpriority="high"
+                          decoding="async"
                           style={{
                             width: '100%',
                             height: '100%',

@@ -1,10 +1,32 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Script from 'next/script';
+import { Noto_Sans_Devanagari, Roboto, Alegreya } from 'next/font/google';
 import './globals.css';
 import Header from '@/components/Header';
 import BreakingTicker from '@/components/BreakingTicker';
 import { CATEGORY_LIST } from '@/lib/categories';
+
+const notoSans = Noto_Sans_Devanagari({
+  subsets: ['devanagari', 'latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  display: 'swap',
+  variable: '--font-noto'
+});
+
+const roboto = Roboto({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  display: 'swap',
+  variable: '--font-roboto'
+});
+
+const alegreya = Alegreya({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  display: 'swap',
+  variable: '--font-alegreya'
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.tanjnama.com'),
@@ -120,16 +142,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   };
 
   return (
-    <html lang="hi">
+    <html lang="hi" className={`${notoSans.variable} ${roboto.variable} ${alegreya.variable}`}>
       <head>
         <meta name="google-adsense-account" content={adsenseClientId} />
         <meta name="google-site-verification" content="Do016rt6M0nMAw7LnXzML-_okC72nLhOSgp6kwZvYxU" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400..900;1,400..900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&display=swap"
-          rel="stylesheet"
-        />
+        
+        {/* Resource Preconnects for Fast DNS & Handshakes */}
+        <link rel="preconnect" href="https://img.youtube.com" />
+        <link rel="dns-prefetch" href="https://img.youtube.com" />
+        <link rel="preconnect" href="https://pagead2.googlesyndication.com" />
+        <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
 
         {/* Google Analytics GA4 (gtag.js) */}
         <Script
@@ -152,11 +174,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
         />
 
-        <script
-          async
+        {/* Google AdSense Script - Optimized Lazy Loading */}
+        <Script
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
+          strategy="lazyOnload"
           crossOrigin="anonymous"
-        ></script>
+        />
       </head>
       <body>
         <div id="outer-wrapper">
@@ -171,7 +194,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <footer className="site-footer">
             <div className="container footer-grid">
               <div className="footer-brand">
-                <img src="/logo.png" alt="TANJNAMA — सोच पर तंज, सच के साथ" className="footer-logo-img" />
+                <img src="/logo.png" alt="TANJNAMA — सोच पर तंज, सच के साथ" className="footer-logo-img" width="180" height="48" loading="lazy" decoding="async" />
                 <p style={{ fontSize: '13px', lineHeight: '1.7', color: '#94a3b8', marginTop: '8px' }}>
                   खबरों के बीच से निकला हुआ तीखा तंज और निष्पक्ष विश्लेषण। हम बिना किसी पक्षपात के लोकतंत्र,
                   समाज और राजनीति की सच्ची तस्वीर प्रस्तुत करने के लिए प्रतिबद्ध हैं।

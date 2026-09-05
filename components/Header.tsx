@@ -79,7 +79,7 @@ export default function Header() {
               ☰
             </button>
             <Link href="/">
-              <img src="/logo.png" alt="TANJNAMA — सोच पर तंज, सच के साथ" className="brand-logo-img" />
+              <img src="/logo.png" alt="TANJNAMA — सोच पर तंज, सच के साथ" className="brand-logo-img" width="180" height="48" loading="eager" decoding="async" />
             </Link>
           </div>
 

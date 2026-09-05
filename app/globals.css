@@ -12,8 +12,8 @@
   --border-color: #e2e8f0;
   --bg-body: #f8fafc;
   --card-bg: #ffffff;
-  --font-serif: 'Alegreya', 'Rozha One', 'Georgia', serif;
-  --font-sans: 'Roboto', 'Noto Sans Devanagari', sans-serif;
+  --font-serif: var(--font-alegreya), 'Georgia', serif;
+  --font-sans: var(--font-noto), var(--font-roboto), sans-serif;
 }
 
 * {
