@@ -23,19 +23,19 @@ export default function CategoryPageFeed({
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   const getPostImage = (p: Post) => {
-    if (p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png') && !p.featured_image.includes('/logo.webp')) {
+    if (p.featured_image && p.featured_image.trim().length > 0) {
       return p.featured_image;
     }
     if (p.video_url && p.video_url.trim().length > 0) {
       const ytThumb = getYouTubeThumbnailUrl(p.video_url);
       if (ytThumb) return ytThumb;
     }
-    return p.featured_image || '/default-cover.webp';
+    return '/logo.png';
   };
 
   const isFullCover = (p: Post) => {
     const img = getPostImage(p);
-    return img !== '/default-cover.webp' && !img.endsWith('/default-cover.webp');
+    return Boolean(img && !img.includes('/logo.png') && !img.includes('/logo.webp'));
   };
 
   const targetSlug = decodeURIComponent(categorySlug).toLowerCase().trim();

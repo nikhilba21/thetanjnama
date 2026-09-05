@@ -82,8 +82,8 @@ export function sortPostsLatestFirst<T extends { published_at?: string | null; c
 
 export function sanitizePostSummary(p: Post): Post {
   let img = p.featured_image;
-  if (img && (img.startsWith('data:image') || img.length > 2000)) {
-    img = '/default-cover.webp';
+  if (img && img.startsWith('data:image') && img.length > 50000) {
+    img = '/logo.png';
   }
   return {
     ...p,
