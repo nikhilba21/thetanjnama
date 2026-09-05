@@ -71,7 +71,7 @@ async function request(path: string, init: RequestInit = {}) {
   return res.json();
 }
 
-export function sortPostsLatestFirst(posts: Post[]): Post[] {
+export function sortPostsLatestFirst<T extends { published_at?: string | null; created_at?: string }>(posts: T[]): T[] {
   if (!Array.isArray(posts)) return [];
   return [...posts].sort((a, b) => {
     const timeA = new Date(a.published_at || a.created_at || 0).getTime();

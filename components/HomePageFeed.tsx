@@ -5,22 +5,7 @@ import AdSense from '@/components/AdSense';
 import { CATEGORY_LIST } from '@/lib/categories';
 import AajKaSawalWidget from '@/components/AajKaSawalWidget';
 
-import { sortPostsLatestFirst } from '@/lib/db';
-
-export type Post = {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  category: string;
-  author: string;
-  featured_image: string | null;
-  video_url?: string | null;
-  status: 'draft' | 'published';
-  published_at?: string | null;
-  created_at?: string;
-};
+import { Post, sortPostsLatestFirst } from '@/lib/db';
 
 interface HomePageFeedProps {
   initialPosts: Post[];
