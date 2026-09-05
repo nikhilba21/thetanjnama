@@ -80,15 +80,44 @@ export function sortPostsLatestFirst<T extends { published_at?: string | null; c
   });
 }
 
+import { getYouTubeThumbnailUrl } from '@/lib/video';
+
+export function extractFirstImageFromHtml(html?: string | null): string | null {
+  if (!html) return null;
+  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  if (match && match[1] && !match[1].startsWith('data:image')) {
+    return match[1];
+  }
+  return null;
+}
+
 export function sanitizePostSummary(p: Post): Post {
   let img = p.featured_image;
+
+  // 1. Extract first image from HTML content if featured_image is missing or default logo
+  if (!img || img.trim().length === 0 || img.includes('/logo.png') || img.includes('/logo.webp')) {
+    const extracted = extractFirstImageFromHtml(p.content);
+    if (extracted) {
+      img = extracted;
+    }
+  }
+
+  // 2. If video_url is present and still no custom image, use YouTube thumbnail
+  if ((!img || img.includes('/logo.png') || img.includes('/logo.webp')) && p.video_url && p.video_url.trim().length > 0) {
+    const ytThumb = getYouTubeThumbnailUrl(p.video_url);
+    if (ytThumb) {
+      img = ytThumb;
+    }
+  }
+
   if (img && img.startsWith('data:image') && img.length > 50000) {
     img = '/logo.png';
   }
+
   return {
     ...p,
     content: '',
-    featured_image: img
+    featured_image: img || p.featured_image || null
   };
 }
 
