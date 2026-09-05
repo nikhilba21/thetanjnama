@@ -70,14 +70,14 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
   const homeVideoPosts = posts.filter((p) => Boolean(p.video_url && p.video_url.trim().length > 0));
 
   const getPostImage = (p: Post) => {
-    if (p.featured_image && p.featured_image.trim().length > 0) {
+    if (p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png') && !p.featured_image.includes('/logo.webp')) {
       return p.featured_image;
     }
     if (p.video_url && p.video_url.trim().length > 0) {
       const ytThumb = getYouTubeThumbnailUrl(p.video_url);
       if (ytThumb) return ytThumb;
     }
-    return '/logo.png';
+    return '/default-cover.webp';
   };
 
   const isFullCover = (p: Post) => {
@@ -142,6 +142,9 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
                           // @ts-ignore
                           fetchpriority="high"
                           decoding="async"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/default-cover.webp';
+                          }}
                           style={{
                             width: '100%',
                             height: '100%',
@@ -224,6 +227,9 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
                               height="90"
                               loading="lazy"
                               decoding="async"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/default-cover.webp';
+                              }}
                               style={{
                                 width: '100%',
                                 height: '100%',
@@ -343,6 +349,9 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
                             height="225"
                             loading="lazy"
                             decoding="async"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/default-cover.webp';
+                            }}
                             style={{
                               width: '100%',
                               height: '100%',

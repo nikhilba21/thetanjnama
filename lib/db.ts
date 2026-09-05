@@ -110,14 +110,16 @@ export function sanitizePostSummary(p: Post): Post {
     }
   }
 
-  if (img && img.startsWith('data:image') && img.length > 50000) {
-    img = '/logo.png';
+  if (img && img.startsWith('data:image') && img.length > 1000000) {
+    img = '/default-cover.webp';
   }
+
+  const finalImg = img && img.trim().length > 0 && !img.includes('/logo.png') ? img : '/default-cover.webp';
 
   return {
     ...p,
     content: '',
-    featured_image: img || p.featured_image || null
+    featured_image: finalImg
   };
 }
 

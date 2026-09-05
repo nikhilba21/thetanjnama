@@ -636,7 +636,7 @@ export default function AdminPage() {
     setField('slug', clean || `post-${Date.now().toString().slice(-6)}`);
   };
 
-  const compressAndUploadMedia = (file: File, callback: (compressedDataUrl: string) => void) => {
+  const compressAndUploadMedia = (file: File, callback: (compressedDataUrl: string, sizeKb: number) => void) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
@@ -644,7 +644,7 @@ export default function AdminPage() {
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        const maxWidth = 1600;
+        const maxWidth = 900;
 
         if (width > maxWidth) {
           height = Math.round((height * maxWidth) / width);
@@ -654,10 +654,19 @@ export default function AdminPage() {
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
+        if (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, width, height);
+        }
 
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-        callback(dataUrl);
+        let dataUrl = canvas.toDataURL('image/webp', 0.78);
+        if (!dataUrl.startsWith('data:image/webp')) {
+          dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+        }
+
+        const sizeKb = Math.round((dataUrl.length * 0.75) / 1024);
+        callback(dataUrl, sizeKb);
       };
       img.src = e.target?.result as string;
     };
@@ -667,10 +676,10 @@ export default function AdminPage() {
   const handleFeaturedMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setStatusMsg('⏳ मीडिया प्रोसेस हो रहा है...');
-      compressAndUploadMedia(file, (dataUrl) => {
+      setStatusMsg('⏳ मीडिया प्रोसेस और कम्प्रेस हो रहा है...');
+      compressAndUploadMedia(file, (dataUrl, sizeKb) => {
         setField('featured_image', dataUrl);
-        setStatusMsg(`📷 मीडिया "${file.name}" सफलतापूर्वक अटैच हो गया!`);
+        setStatusMsg(`📷 मीडिया "${file.name}" सफलतापूर्वक कम्प्रेस हुआ (${sizeKb} KB) और अटैच हो गया!`);
       });
     }
   };
@@ -678,13 +687,13 @@ export default function AdminPage() {
   const handleInsertBodyMedia = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setStatusMsg('⏳ मीडिया प्रोसेस हो रहा है...');
-      compressAndUploadMedia(file, (dataUrl) => {
+      setStatusMsg('⏳ मीडिया प्रोसेस और कम्प्रेस हो रहा है...');
+      compressAndUploadMedia(file, (dataUrl, sizeKb) => {
         setForm((prev) => ({
           ...prev,
           content: prev.content + `\n<img src="${dataUrl}" alt="Media" class="article-image" />\n`
         }));
-        setStatusMsg(`📷 बॉडी मीडिया "${file.name}" इंसर्ट हुआ!`);
+        setStatusMsg(`📷 बॉडी मीडिया "${file.name}" सफलतापूर्वक कम्प्रेस हुआ (${sizeKb} KB) और इंसर्ट हुआ!`);
       });
     }
   };
