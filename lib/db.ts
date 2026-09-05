@@ -71,14 +71,25 @@ async function request(path: string, init: RequestInit = {}) {
   return res.json();
 }
 
+export function sortPostsLatestFirst(posts: Post[]): Post[] {
+  if (!Array.isArray(posts)) return [];
+  return [...posts].sort((a, b) => {
+    const timeA = new Date(a.published_at || a.created_at || 0).getTime();
+    const timeB = new Date(b.published_at || b.created_at || 0).getTime();
+    return timeB - timeA;
+  });
+}
+
 export async function getPublishedPosts(limit = 50): Promise<Post[]> {
   try {
     const live = (await request(`posts?status=eq.published&order=published_at.desc&limit=${limit}`)) as Post[] | null;
-    if (live && Array.isArray(live) && live.length > 0) return live;
+    if (live && Array.isArray(live) && live.length > 0) {
+      return sortPostsLatestFirst(live).slice(0, limit);
+    }
   } catch (e) {
     console.warn('Supabase DB fetch failed, using memory fallback');
   }
-  return inMemoryPosts.filter((p) => p.status === 'published').slice(0, limit);
+  return sortPostsLatestFirst(inMemoryPosts.filter((p) => p.status === 'published')).slice(0, limit);
 }
 
 export async function getPostsByCategory(categorySlugOrName: string, limit = 50): Promise<Post[]> {
@@ -87,7 +98,7 @@ export async function getPostsByCategory(categorySlugOrName: string, limit = 50)
   const isVideoCategory =
     target === 'videos' || target === 'video' || target === 'वीडियो' || target === 'वीडियो समाचार';
 
-  return all.filter((p) => {
+  const filtered = all.filter((p) => {
     const cat = (p.category || '').toLowerCase().trim();
     if (isVideoCategory) {
       return (
@@ -100,6 +111,8 @@ export async function getPostsByCategory(categorySlugOrName: string, limit = 50)
     }
     return cat === target || getCategorySlugFromName(p.category) === target;
   });
+
+  return sortPostsLatestFirst(filtered);
 }
 
 export async function getPost(slug: string): Promise<Post | null> {
@@ -115,11 +128,13 @@ export async function getPost(slug: string): Promise<Post | null> {
 export async function getAdminPosts(): Promise<Post[]> {
   try {
     const live = (await request('posts?order=created_at.desc')) as Post[] | null;
-    if (live && Array.isArray(live)) return live;
+    if (live && Array.isArray(live)) {
+      return sortPostsLatestFirst(live);
+    }
   } catch (e) {
     console.warn('Supabase getAdminPosts failed, using memory fallback');
   }
-  return inMemoryPosts;
+  return sortPostsLatestFirst(inMemoryPosts);
 }
 
 export async function createPost(data: Partial<Post>): Promise<Post> {

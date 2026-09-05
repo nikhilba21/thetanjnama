@@ -5,6 +5,8 @@ import AdSense from '@/components/AdSense';
 import { CATEGORY_LIST } from '@/lib/categories';
 import AajKaSawalWidget from '@/components/AajKaSawalWidget';
 
+import { sortPostsLatestFirst } from '@/lib/db';
+
 export type Post = {
   id: string;
   title: string;
@@ -17,6 +19,7 @@ export type Post = {
   video_url?: string | null;
   status: 'draft' | 'published';
   published_at?: string | null;
+  created_at?: string;
 };
 
 interface HomePageFeedProps {
@@ -24,7 +27,7 @@ interface HomePageFeedProps {
 }
 
 export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
-  const [posts, setPosts] = useState<Post[]>(initialPosts);
+  const [posts, setPosts] = useState<Post[]>(sortPostsLatestFirst(initialPosts));
 
   useEffect(() => {
     async function loadAllHomePosts() {
@@ -52,7 +55,7 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
             if (lp.status === 'published') {
               const idx = merged.findIndex((m) => m.id === lp.id || m.slug === lp.slug);
               if (idx !== -1) {
-                merged[idx] = lp; // Override with local edit containing uploaded media
+                merged[idx] = lp;
               } else {
                 merged.unshift(lp);
               }
@@ -63,7 +66,7 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
         console.warn('LocalStorage load notice on homepage');
       }
 
-      setPosts(merged);
+      setPosts(sortPostsLatestFirst(merged));
     }
 
     loadAllHomePosts();

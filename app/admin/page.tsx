@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import RichTextEditor from '@/components/RichTextEditor';
+import VideoPlayer from '@/components/VideoPlayer';
 
 type Post = {
   id?: string;
@@ -81,12 +82,19 @@ export default function AdminPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  const [activeTab, setActiveTab] = useState<'editor' | 'categories' | 'poll' | 'pages' | 'citizen' | 'ticker' | 'manage'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'video' | 'categories' | 'poll' | 'pages' | 'citizen' | 'ticker' | 'manage'>('editor');
   const [posts, setPosts] = useState<Post[]>([]);
   const [tickers, setTickers] = useState<TickerItem[]>([]);
   const [citizenSubmissions, setCitizenSubmissions] = useState<any[]>([]);
   const [isTickerActive, setIsTickerActive] = useState<boolean>(true);
   const [newTickerText, setNewTickerText] = useState('');
+
+  // DEDICATED VIDEO POST CREATOR STATE
+  const [videoTitle, setVideoTitle] = useState('');
+  const [videoEmbedCode, setVideoEmbedCode] = useState('');
+  const [videoCategory, setVideoCategory] = useState('वीडियो समाचार');
+  const [videoAuthor, setVideoAuthor] = useState('तंजनामा वीडियो डेस्क');
+  const [videoExcerpt, setVideoExcerpt] = useState('');
 
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [newCatName, setNewCatName] = useState('');
@@ -381,7 +389,7 @@ export default function AdminPage() {
     }
   };
 
-  // LOAD POSTS
+  // LOAD POSTS & SORT LATEST FIRST
   async function loadPosts() {
     let combined: Post[] = [];
     try {
@@ -406,8 +414,74 @@ export default function AdminPage() {
       }
     } catch (e) {}
 
-    setPosts(combined);
+    const sorted = combined.sort((a, b) => {
+      const timeA = new Date(a.published_at || a.created_at || 0).getTime();
+      const timeB = new Date(b.published_at || b.created_at || 0).getTime();
+      return timeB - timeA;
+    });
+
+    setPosts(sorted);
   }
+
+  // CREATE DEDICATED YOUTUBE EMBED VIDEO POST
+  const handleCreateVideoPost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!videoTitle.trim() || !videoEmbedCode.trim()) {
+      setStatusMsg('❌ कृपया वीडियो शीर्षक और यूट्यूब एम्बेड कोड (Embed Code) दर्ज करें।');
+      return;
+    }
+
+    setStatusMsg('⏳ नया यूट्यूब वीडियो पोस्ट प्रकाशित हो रहा है...');
+
+    const cleanSlug =
+      videoTitle
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '') || `video-${Date.now()}`;
+
+    const videoPostPayload: Post = {
+      id: `post-${Date.now()}`,
+      title: videoTitle.trim(),
+      slug: `${cleanSlug}-${Date.now().toString().slice(-4)}`,
+      excerpt: videoExcerpt.trim() || `${videoTitle.trim()} — विशेष वीडियो रिपोर्ट।`,
+      content: `<p style="font-size:16px; font-weight:600;">${videoTitle.trim()}</p>\n<p>${videoExcerpt.trim() || videoTitle.trim()}</p>`,
+      category: videoCategory.trim() || 'वीडियो समाचार',
+      author: videoAuthor.trim() || 'तंजनामा वीडियो डेस्क',
+      featured_image: null,
+      video_url: videoEmbedCode.trim(),
+      status: 'published',
+      published_at: new Date().toISOString(),
+      created_at: new Date().toISOString()
+    };
+
+    saveLocalPostBackup(videoPostPayload);
+
+    try {
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(videoPostPayload)
+      });
+
+      if (res.ok) {
+        const saved = await res.json();
+        saveLocalPostBackup(saved);
+        setStatusMsg('🚀 नया यूट्यूब वीडियो पोस्ट सफलतापूर्वक प्रकाशित हुआ!');
+      } else {
+        setStatusMsg('✅ वीडियो पोस्ट सर्वर/लोकल में प्रकाशित हो गया!');
+      }
+    } catch (err) {
+      setStatusMsg('✅ वीडियो पोस्ट सहेजा गया!');
+    }
+
+    setVideoTitle('');
+    setVideoEmbedCode('');
+    setVideoExcerpt('');
+    await loadPosts();
+    setActiveTab('manage');
+  };
 
   const saveLocalPostBackup = (postToSave: Post) => {
     try {
@@ -813,6 +887,22 @@ export default function AdminPage() {
           </button>
 
           <button
+            onClick={() => setActiveTab('video')}
+            style={{
+              padding: '10px 20px',
+              fontSize: '14px',
+              fontWeight: 700,
+              borderRadius: '6px',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeTab === 'video' ? 'var(--primary)' : '#e2e8f0',
+              color: activeTab === 'video' ? '#ffffff' : '#334155'
+            }}
+          >
+            🎥 नया वीडियो पोस्ट बनाएं (Embed Video)
+          </button>
+
+          <button
             onClick={() => setActiveTab('categories')}
             style={{
               padding: '10px 20px',
@@ -1071,28 +1161,6 @@ export default function AdminPage() {
                 )}
               </div>
 
-              {/* DEDICATED YOUTUBE / VIDEO URL EMBED BOX */}
-              <div style={{ background: '#f8fafc', padding: '18px', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>
-                  🎥 वीडियो एम्बेड (YouTube / Shorts / Video Link Embed)
-                </label>
-                <span style={{ display: 'block', fontSize: '12px', color: '#64748b', marginBottom: '8px' }}>
-                  यूट्यूब वीडियो या Shorts का लिंक पेस्ट करें (उदा. https://www.youtube.com/watch?v=... या https://youtube.com/shorts/...)
-                </span>
-                <input
-                  type="url"
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  value={form.video_url || ''}
-                  onChange={(e) => setField('video_url', e.target.value)}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
-                />
-                {form.video_url && (
-                  <div style={{ marginTop: '10px', fontSize: '12px', color: '#166534', fontWeight: 600 }}>
-                    ✅ वीडियो लिंक सेट हो गया है! खबर खोलते ही सुपरफास्ट वीडियो प्लेयर दिखेगा।
-                  </div>
-                )}
-              </div>
-
               <div style={{ marginBottom: '18px' }}>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
                   संक्षिप्त सारांश (Excerpt)
@@ -1128,6 +1196,111 @@ export default function AdminPage() {
                 style={{ width: '100%', background: 'var(--primary)', color: '#ffffff', border: 'none', padding: '14px', borderRadius: '6px', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}
               >
                 {editingId ? 'लेख व मीडिया अपडेट करें (Update Article)' : 'लेख व मीडिया प्रकाशित / सहेजें (Publish Article)'}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* TAB 1.5: DEDICATED YOUTUBE EMBED VIDEO POST CREATOR */}
+        {activeTab === 'video' && (
+          <div style={{ background: '#ffffff', padding: '30px', borderRadius: '8px', border: '1px solid #cbd5e1', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+            <h2 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '8px' }}>
+              🎥 यूट्यूब वीडियो पोस्ट प्रकाशित करें (Embed Video Post Creator)
+            </h2>
+            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '24px' }}>
+              यहाँ यूट्यूब से <strong>Embed Video Code (&lt;iframe ...&gt;&lt;/iframe&gt;)</strong> पेस्ट करें और वीडियो का शीर्षक डालकर सीधे वेबसाइट पर पोस्ट करें।
+            </p>
+
+            <form onSubmit={handleCreateVideoPost}>
+              <div style={{ marginBottom: '18px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  1. वीडियो का शीर्षक (Video Title) *
+                </label>
+                <input
+                  type="text"
+                  placeholder="वीडियो का शीर्षक यहाँ दर्ज करें..."
+                  value={videoTitle}
+                  onChange={(e) => setVideoTitle(e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '15px' }}
+                  required
+                />
+              </div>
+
+              <div style={{ marginBottom: '18px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  2. यूट्यूब एम्बेड कोड (Embed Video Code - &lt;iframe ...&gt;) *
+                </label>
+                <textarea
+                  rows={4}
+                  placeholder='यूट्यूब पर Share > Embed पर क्लिक करके पूरा <iframe ...></iframe> कोड या यूट्यूब वीडियो लिंक पेस्ट करें...'
+                  value={videoEmbedCode}
+                  onChange={(e) => setVideoEmbedCode(e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', fontFamily: 'monospace' }}
+                  required
+                />
+                <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
+                  💡 टिप: यूट्यूब वीडियो के नीचे Share &gt; Embed पर क्लिक करके मिले &lt;iframe ...&gt;&lt;/iframe&gt; कोड को यहाँ पेस्ट करें।
+                </span>
+              </div>
+
+              {/* LIVE EMBED PREVIEW */}
+              {videoEmbedCode.trim().length > 0 && (
+                <div style={{ marginBottom: '20px', background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#166534', marginBottom: '8px' }}>
+                    📺 वीडियो लाइव पूर्वावलोकन (Live Embed Video Preview):
+                  </h4>
+                  <VideoPlayer videoUrl={videoEmbedCode} title={videoTitle || 'Preview'} />
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '18px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                    श्रेणी (Category)
+                  </label>
+                  <select
+                    value={videoCategory}
+                    onChange={(e) => setVideoCategory(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', background: '#fff' }}
+                  >
+                    <option value="वीडियो समाचार">वीडियो समाचार</option>
+                    {categories.map((c) => (
+                      <option key={c.id || c.slug} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                    लेखक / रिपोर्टर (Author)
+                  </label>
+                  <input
+                    type="text"
+                    value={videoAuthor}
+                    onChange={(e) => setVideoAuthor(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  संक्षिप्त विवरण (Short Description / Excerpt)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="वीडियो की 2 लाइन की संक्षिप्त जानकारी..."
+                  value={videoExcerpt}
+                  onChange={(e) => setVideoExcerpt(e.target.value)}
+                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                style={{ width: '100%', background: 'var(--primary)', color: '#ffffff', border: 'none', padding: '14px', borderRadius: '6px', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                🚀 वीडियो पोस्ट प्रकाशित करें (Publish Video Post)
               </button>
             </form>
           </div>

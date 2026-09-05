@@ -24,12 +24,14 @@ interface CategoryPageFeedProps {
   initialPosts: Post[];
 }
 
+import { sortPostsLatestFirst } from '@/lib/db';
+
 export default function CategoryPageFeed({
   categorySlug,
   categoryName,
   initialPosts
 }: CategoryPageFeedProps) {
-  const [posts, setPosts] = useState<Post[]>(initialPosts);
+  const [posts, setPosts] = useState<Post[]>(sortPostsLatestFirst(initialPosts));
 
   useEffect(() => {
     async function syncCategoryArticles() {
@@ -99,7 +101,7 @@ export default function CategoryPageFeed({
         );
       });
 
-      setPosts(filtered);
+      setPosts(sortPostsLatestFirst(filtered));
     }
 
     syncCategoryArticles();
