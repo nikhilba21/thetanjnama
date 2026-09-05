@@ -6,6 +6,7 @@ import VideoPlayer from '@/components/VideoPlayer';
 
 import { Post, sortPostsLatestFirst } from '@/lib/db';
 import { getYouTubeThumbnailUrl } from '@/lib/video';
+import { formatDateSafe } from '@/lib/date';
 
 interface CategoryPageFeedProps {
   categorySlug: string;
@@ -22,19 +23,19 @@ export default function CategoryPageFeed({
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   const getPostImage = (p: Post) => {
-    if (p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png')) {
+    if (p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png') && !p.featured_image.includes('/logo.webp')) {
       return p.featured_image;
     }
     if (p.video_url && p.video_url.trim().length > 0) {
       const ytThumb = getYouTubeThumbnailUrl(p.video_url);
       if (ytThumb) return ytThumb;
     }
-    return p.featured_image || '/logo.png';
+    return p.featured_image || '/default-cover.webp';
   };
 
   const isFullCover = (p: Post) => {
     const img = getPostImage(p);
-    return img !== '/logo.png' && !img.endsWith('/logo.png');
+    return img !== '/default-cover.webp' && !img.endsWith('/default-cover.webp');
   };
 
   const targetSlug = decodeURIComponent(categorySlug).toLowerCase().trim();
@@ -263,7 +264,7 @@ export default function CategoryPageFeed({
 
                       <div>
                         <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '12px' }}>
-                          ✍️ {p.author} • 📅 {p.published_at ? new Date(p.published_at).toLocaleDateString('hi-IN') : 'हाल ही में'}
+                          ✍️ {p.author} • 📅 {formatDateSafe(p.published_at)}
                         </div>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           {p.video_url && (
@@ -391,7 +392,7 @@ export default function CategoryPageFeed({
                       {p.excerpt}
                     </p>
                     <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-                      {p.author} • {p.published_at ? new Date(p.published_at).toLocaleDateString('hi-IN') : 'हाल ही में'}
+                      {p.author} • {formatDateSafe(p.published_at)}
                     </span>
                   </div>
                 </article>

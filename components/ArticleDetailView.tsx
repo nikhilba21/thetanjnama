@@ -4,6 +4,7 @@ import Link from 'next/link';
 import AdSense from '@/components/AdSense';
 import VideoPlayer from '@/components/VideoPlayer';
 import { getYouTubeThumbnailUrl } from '@/lib/video';
+import { formatDateSafe } from '@/lib/date';
 
 export type Post = {
   id: string;
@@ -59,19 +60,19 @@ export default function ArticleDetailView({ initialPost, slug, allPosts }: Artic
   const postUrl = typeof window !== 'undefined' ? window.location.href : `https://www.tanjnama.com/posts/${post.slug}`;
 
   const getPostImage = (p: Post) => {
-    if (p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png')) {
+    if (p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png') && !p.featured_image.includes('/logo.webp')) {
       return p.featured_image;
     }
     if (p.video_url && p.video_url.trim().length > 0) {
       const ytThumb = getYouTubeThumbnailUrl(p.video_url);
       if (ytThumb) return ytThumb;
     }
-    return p.featured_image || '/logo.png';
+    return p.featured_image || '/default-cover.webp';
   };
 
   const isFullCover = (p: Post) => {
     const img = getPostImage(p);
-    return img !== '/logo.png' && !img.endsWith('/logo.png');
+    return img !== '/default-cover.webp' && !img.endsWith('/default-cover.webp');
   };
 
   const isDefaultLogo = !isFullCover(post);
@@ -88,7 +89,7 @@ export default function ArticleDetailView({ initialPost, slug, allPosts }: Artic
         <div className="article-meta-row">
           <span>✍️ <strong>{post.author}</strong></span>
           <span>•</span>
-          <span>📅 {post.published_at ? new Date(post.published_at).toLocaleDateString('hi-IN') : 'हाल ही में'}</span>
+          <span>📅 {formatDateSafe(post.published_at)}</span>
           <span>•</span>
           <span>⏱️ {readTimeMin} मिनट पठन</span>
         </div>

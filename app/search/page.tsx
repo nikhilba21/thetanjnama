@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { searchPosts } from '@/lib/db';
 import { getYouTubeThumbnailUrl } from '@/lib/video';
+import { formatDateSafe } from '@/lib/date';
 
 export default async function SearchPage({
   searchParams
@@ -11,19 +12,19 @@ export default async function SearchPage({
   const results = query ? await searchPosts(query) : [];
 
   const getPostImage = (p: any) => {
-    if (p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png')) {
+    if (p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png') && !p.featured_image.includes('/logo.webp')) {
       return p.featured_image;
     }
     if (p.video_url && p.video_url.trim().length > 0) {
       const ytThumb = getYouTubeThumbnailUrl(p.video_url);
       if (ytThumb) return ytThumb;
     }
-    return p.featured_image || '/logo.png';
+    return p.featured_image || '/default-cover.webp';
   };
 
   const isFullCover = (p: any) => {
     const img = getPostImage(p);
-    return img !== '/logo.png' && !img.endsWith('/logo.png');
+    return img !== '/default-cover.webp' && !img.endsWith('/default-cover.webp');
   };
 
   return (
@@ -48,6 +49,10 @@ export default async function SearchPage({
                     <img
                       src={getPostImage(p)}
                       alt={p.title}
+                      width="400"
+                      height="225"
+                      loading="lazy"
+                      decoding="async"
                       style={{
                         width: '100%',
                         height: '100%',
@@ -62,7 +67,7 @@ export default async function SearchPage({
                   <h3>{p.title}</h3>
                   <p>{p.excerpt}</p>
                   <div className="post-meta-line">
-                    <span>📅 {new Date(p.published_at || Date.now()).toLocaleDateString('hi-IN')}</span>
+                    <span>📅 {formatDateSafe(p.published_at)}</span>
                     <span>•</span>
                     <span>{p.author}</span>
                   </div>

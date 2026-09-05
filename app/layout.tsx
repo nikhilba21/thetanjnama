@@ -198,7 +198,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <footer className="site-footer">
             <div className="container footer-grid">
               <div className="footer-brand">
-                <img src="/logo.png" alt="TANJNAMA — सोच पर तंज, सच के साथ" className="footer-logo-img" width="180" height="48" loading="lazy" decoding="async" />
+                <img src="/logo.webp" alt="TANJNAMA — सोच पर तंज, सच के साथ" className="footer-logo-img" width="180" height="48" loading="lazy" decoding="async" />
                 <p style={{ fontSize: '13px', lineHeight: '1.7', color: '#94a3b8', marginTop: '8px' }}>
                   खबरों के बीच से निकला हुआ तीखा तंज और निष्पक्ष विश्लेषण। हम बिना किसी पक्षपात के लोकतंत्र,
                   समाज और राजनीति की सच्ची तस्वीर प्रस्तुत करने के लिए प्रतिबद्ध हैं।

@@ -8,6 +8,7 @@ import VideoPlayer from '@/components/VideoPlayer';
 
 import { Post, sortPostsLatestFirst } from '@/lib/db';
 import { getYouTubeThumbnailUrl } from '@/lib/video';
+import { formatDateSafe } from '@/lib/date';
 
 interface HomePageFeedProps {
   initialPosts: Post[];
@@ -69,19 +70,19 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
   const homeVideoPosts = posts.filter((p) => Boolean(p.video_url && p.video_url.trim().length > 0));
 
   const getPostImage = (p: Post) => {
-    if (p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png')) {
+    if (p.featured_image && p.featured_image.trim().length > 0 && !p.featured_image.includes('/logo.png') && !p.featured_image.includes('/logo.webp')) {
       return p.featured_image;
     }
     if (p.video_url && p.video_url.trim().length > 0) {
       const ytThumb = getYouTubeThumbnailUrl(p.video_url);
       if (ytThumb) return ytThumb;
     }
-    return p.featured_image || '/logo.png';
+    return p.featured_image || '/default-cover.webp';
   };
 
   const isFullCover = (p: Post) => {
     const img = getPostImage(p);
-    return img !== '/logo.png' && !img.endsWith('/logo.png');
+    return img !== '/default-cover.webp' && !img.endsWith('/default-cover.webp');
   };
 
   return (
@@ -187,7 +188,7 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
                       <div>
                         <span>✍️ {heroPost.author}</span>
                         <span style={{ margin: '0 6px' }}>•</span>
-                        <span>📅 {new Date(heroPost.published_at || Date.now()).toLocaleDateString('hi-IN')}</span>
+                        <span>📅 {formatDateSafe(heroPost.published_at)}</span>
                       </div>
                       {heroPost.video_url && (
                         <button
@@ -387,7 +388,7 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
                       </h3>
                       <p>{p.excerpt}</p>
                       <div className="post-meta-line" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>{new Date(p.published_at || Date.now()).toLocaleDateString('hi-IN')} • {p.author}</span>
+                        <span>{formatDateSafe(p.published_at)} • {p.author}</span>
                         {p.video_url && (
                           <button
                             onClick={() => setPlayingVideoId(isPlaying ? null : (p.id || p.slug))}
@@ -415,7 +416,7 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
         <AajKaSawalWidget />
 
         {/* SIDEBAR ADSENSE WIDGET */}
-        <div className="sidebar-widget">
+        <div className="sidebar-widget" style={{ minHeight: '280px' }}>
           <AdSense slot="sidebar-home" format="auto" />
         </div>
 

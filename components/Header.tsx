@@ -54,7 +54,7 @@ export default function Header() {
         <div className="container top-bar-inner">
           <div className="top-date">
             <span className="live-dot"></span>
-            <span>{currentDate || 'बुधवार, 19 अगस्त 2026'}</span>
+            <span suppressHydrationWarning>{currentDate || 'शनिवार, 5 सितंबर 2026'}</span>
           </div>
 
           <div className="top-socials">
@@ -79,7 +79,7 @@ export default function Header() {
               ☰
             </button>
             <Link href="/">
-              <img src="/logo.png" alt="TANJNAMA — सोच पर तंज, सच के साथ" className="brand-logo-img" width="180" height="48" loading="eager" decoding="async" />
+              <img src="/logo.webp" alt="TANJNAMA — सोच पर तंज, सच के साथ" className="brand-logo-img" width="180" height="48" loading="eager" decoding="async" />
             </Link>
           </div>
 
