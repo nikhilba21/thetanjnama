@@ -426,21 +426,6 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
               </div>
             )}
           </>
-        )}& (
-                          <button
-                            onClick={() => setPlayingVideoId(isPlaying ? null : (p.id || p.slug))}
-                            style={{ background: 'var(--primary)', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}
-                          >
-                            {isPlaying ? '⏸️ बंद' : '▶ प्ले'}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
         )}
 
         {/* IN-FEED ADSENSE PLACEMENT */}
