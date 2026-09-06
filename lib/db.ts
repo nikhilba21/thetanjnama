@@ -97,21 +97,21 @@ export function sanitizePostSummary(p: Post): Post {
   // 1. Extract first image from HTML content if featured_image is missing or default logo
   if (!img || img.trim().length === 0 || img.includes('/logo.png') || img.includes('/logo.webp')) {
     const extracted = extractFirstImageFromHtml(p.content);
-    if (extracted && !extracted.startsWith('data:image')) {
+    if (extracted) {
       img = extracted;
     }
   }
 
   // 2. If video_url is present and still no custom image, use YouTube thumbnail
-  if ((!img || img.includes('/logo.png') || img.includes('/logo.webp') || img.startsWith('data:image')) && p.video_url && p.video_url.trim().length > 0) {
+  if ((!img || img.includes('/logo.png') || img.includes('/logo.webp')) && p.video_url && p.video_url.trim().length > 0) {
     const ytThumb = getYouTubeThumbnailUrl(p.video_url);
     if (ytThumb) {
       img = ytThumb;
     }
   }
 
-  // 3. Do not inline heavy base64 strings into feed summary JSON/HTML to keep document payload < 30 KB
-  if (img && img.startsWith('data:image')) {
+  // 3. Allow compressed uploaded base64 images (up to 80,000 chars ~ 60 KB WebP) so post photos display cleanly
+  if (img && img.startsWith('data:image') && img.length > 80000) {
     img = '/default-cover.webp';
   }
 
