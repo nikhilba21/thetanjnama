@@ -85,27 +85,10 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
     return Boolean(img && !img.includes('/logo.png') && !img.includes('/logo.webp'));
   };
 
-  const [visibleCount, setVisibleCount] = useState(12);
+  const [visibleCount, setVisibleCount] = useState(5);
 
   const displayedMainPosts = mainPosts.slice(0, visibleCount);
   const hasMore = visibleCount < mainPosts.length;
-
-  useEffect(() => {
-    const sentinel = document.getElementById('load-more-sentinel');
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          setVisibleCount((prev) => prev + 12);
-        }
-      },
-      { rootMargin: '300px' }
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [hasMore]);
 
   return (
     <div className="main-layout">
@@ -435,9 +418,8 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
 
             {hasMore && (
               <div style={{ textAlign: 'center', marginTop: '28px', marginBottom: '24px' }}>
-                <div id="load-more-sentinel" style={{ height: '10px', marginBottom: '10px' }} />
                 <button
-                  onClick={() => setVisibleCount((prev) => prev + 12)}
+                  onClick={() => setVisibleCount((prev) => prev + 5)}
                   className="btn-primary"
                   style={{
                     padding: '12px 32px',
@@ -448,7 +430,7 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
                     boxShadow: '0 4px 14px rgba(211, 16, 24, 0.3)'
                   }}
                 >
-                  📥 और खबरें लोड करें ({mainPosts.length - visibleCount} शेष)
+                  📥 और खबरें लोड करें (5 और देखें — {mainPosts.length - visibleCount} शेष)
                 </button>
               </div>
             )}

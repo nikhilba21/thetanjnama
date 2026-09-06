@@ -110,8 +110,8 @@ export function sanitizePostSummary(p: Post): Post {
     }
   }
 
-  // 3. Allow compressed uploaded base64 images (up to 80,000 chars ~ 60 KB WebP) so post photos display cleanly
-  if (img && img.startsWith('data:image') && img.length > 80000) {
+  // 3. Allow base64 uploaded images (up to 500,000 chars ~ 375 KB) so all post photos display cleanly
+  if (img && img.startsWith('data:image') && img.length > 500000) {
     img = '/default-cover.webp';
   }
 
