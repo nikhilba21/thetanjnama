@@ -4,7 +4,7 @@ import HomePageFeed from '@/components/HomePageFeed';
 export const revalidate = 60;
 
 export default async function Home() {
-  const posts = await getPublishedPosts(30);
+  const posts = await getPublishedPosts(100);
 
   return (
     <main className="page-container">

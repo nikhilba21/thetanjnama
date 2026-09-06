@@ -110,7 +110,8 @@ export function sanitizePostSummary(p: Post): Post {
     }
   }
 
-  if (img && img.startsWith('data:image') && img.length > 1000000) {
+  // 3. Cap oversized base64 strings (> 70,000 chars ~ 50 KB) to prevent HTML payload bloat
+  if (img && img.startsWith('data:image') && img.length > 70000) {
     img = '/default-cover.webp';
   }
 

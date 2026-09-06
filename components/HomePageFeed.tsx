@@ -90,6 +90,23 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
   const displayedMainPosts = mainPosts.slice(0, visibleCount);
   const hasMore = visibleCount < mainPosts.length;
 
+  useEffect(() => {
+    const sentinel = document.getElementById('load-more-sentinel');
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setVisibleCount((prev) => prev + 12);
+        }
+      },
+      { rootMargin: '300px' }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore]);
+
   return (
     <div className="main-layout">
       {/* MAIN NEWS FEED */}
@@ -418,6 +435,7 @@ export default function HomePageFeed({ initialPosts }: HomePageFeedProps) {
 
             {hasMore && (
               <div style={{ textAlign: 'center', marginTop: '28px', marginBottom: '24px' }}>
+                <div id="load-more-sentinel" style={{ height: '10px', marginBottom: '10px' }} />
                 <button
                   onClick={() => setVisibleCount((prev) => prev + 12)}
                   className="btn-primary"
