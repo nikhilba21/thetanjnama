@@ -504,7 +504,7 @@ a {
 
 .post-card-content p {
   font-size: 13px;
-  color: var(--text-muted);
+  color: #334155;
   line-height: 1.5;
   margin-bottom: 12px;
   flex: 1;
@@ -522,6 +522,7 @@ a {
   border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 18px;
+  contain: layout;
 }
 
 .widget-title {
@@ -586,21 +587,20 @@ a {
   border: 1px dashed #cbd5e1;
   padding: 12px;
   border-radius: 6px;
+  contain: layout;
 }
 
 .ad-label {
   display: block;
   font-size: 10px;
-  color: #94a3b8;
+  color: #475569;
+  font-weight: 600;
   letter-spacing: 0.5px;
   margin-bottom: 4px;
 }
 
 .adsense-placeholder {
   padding: 18px;
-  background: #f1f5f9;
-  color: #64748b;
-  font-size: 12px;
 }
 
 /* ARTICLE CONTAINER */
