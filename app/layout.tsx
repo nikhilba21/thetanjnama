@@ -55,8 +55,15 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://www.tanjnama.com'
   },
-  verification: {
-    google: 'Do016rt6M0nMAw7LnXzML-_okC72nLhOSgp6kwZvYxU'
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon.png', type: 'image/png' },
+      { url: '/icon.png', type: 'image/png' }
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+    ]
   },
   other: {
     'google-adsense-account': 'ca-pub-3935952599641519'
